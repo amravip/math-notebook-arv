@@ -136,27 +136,22 @@ function pageShell({ title, active, bodyHtml, root, extraScripts }) {
 </head>
 <body>
 <div class="wrap">
-  <aside class="sidebar" id="sidebar">
+  <header class="topbar">
     <a class="brandmark" href="${root}index.html">
       <div class="glyph">&#8721;</div>
       <div><h1>The Maths Notebook</h1><p>Years 6 &ndash; 8 &middot; NZ</p></div>
     </a>
-    <div class="search">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input id="search" type="text" placeholder="Search a topic&hellip;" aria-label="Search topics">
-    </div>
-    <nav id="nav"></nav>
-  </aside>
+    <nav class="topnav" id="nav"></nav>
+    <button class="navtoggle" id="navtoggle" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
   <main class="main">
     <div class="inner">
 ${bodyHtml}
     </div>
   </main>
 </div>
-<button class="navtoggle" id="navtoggle" aria-label="Open topics menu">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-</button>
-<div class="scrim" id="scrim"></div>
 <script src="${root}js/toc-data.js"></script>
 <script src="${root}js/progress-store.js"></script>
 <script src="${root}js/nav.js"></script>
@@ -308,20 +303,43 @@ function renderCoverPage() {
 function renderContentsPage(strands) {
   const groups = strands.map((g) => `<div class="toc-strand" style="--strand:${g.color}">
     <h3>${g.strand}</h3>
-    <div class="toc-grid">${g.topics.map((t, i) => `<a class="toc-card" href="topics/${t.id}.html" data-tid="${t.id}">
+    <div class="toc-grid">${g.topics.map((t, i) => `<a class="toc-card" href="topics/${t.id}.html" data-tid="${t.id}" data-search="${(t.name + ' ' + t.idea).toLowerCase()}">
         <span class="toc-num">${i + 1}</span>
         <span><span class="toc-name">${t.name}</span><br><span class="toc-year">${t.year}</span></span>
       </a>`).join('')}</div>
   </div>`).join('\n');
   return `<h1 style="font-family:'Bricolage Grotesque';font-size:28px;margin:0 0 4px">Table of Contents</h1>
-<p class="hero p" style="margin-bottom:20px">24 chapters, grouped by strand. A filled tick in the sidebar (and a solid number here) means every question in that chapter has been answered.</p>
+<p class="hero p" style="margin-bottom:14px">24 chapters, grouped by strand. A solid number means every question in that chapter has been answered.</p>
+<div class="toc-search">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+  <input id="toc-search-input" type="text" placeholder="Search a topic&hellip;" aria-label="Search topics">
+</div>
 ${groups}
+<p class="muted" id="toc-empty" style="display:none;color:var(--ink-soft)">No topics match that search.</p>
 <script>
 (function(){
-  if(!window.ProgressStore) return;
-  document.querySelectorAll('.toc-card').forEach(function(a){
-    var n = window.ProgressStore.topicAnsweredCount(a.dataset.tid);
-    a.classList.toggle('done', n >= window.ProgressStore.QUESTIONS_PER_TOPIC);
+  if(window.ProgressStore){
+    document.querySelectorAll('.toc-card').forEach(function(a){
+      var n = window.ProgressStore.topicAnsweredCount(a.dataset.tid);
+      a.classList.toggle('done', n >= window.ProgressStore.QUESTIONS_PER_TOPIC);
+    });
+  }
+  var input = document.getElementById('toc-search-input');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.toc-card'));
+  var strandsEl = Array.prototype.slice.call(document.querySelectorAll('.toc-strand'));
+  input.addEventListener('input', function(){
+    var q = input.value.trim().toLowerCase();
+    var anyVisible = false;
+    cards.forEach(function(c){
+      var show = !q || c.dataset.search.indexOf(q) !== -1;
+      c.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
+    strandsEl.forEach(function(g){
+      var any = Array.prototype.some.call(g.querySelectorAll('.toc-card'), function(c){ return c.style.display !== 'none'; });
+      g.style.display = any ? '' : 'none';
+    });
+    document.getElementById('toc-empty').style.display = anyVisible ? 'none' : 'block';
   });
 })();
 </script>`;

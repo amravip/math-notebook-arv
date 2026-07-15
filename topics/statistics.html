@@ -13,17 +13,16 @@
 </head>
 <body>
 <div class="wrap">
-  <aside class="sidebar" id="sidebar">
+  <header class="topbar">
     <a class="brandmark" href="../index.html">
       <div class="glyph">&#8721;</div>
       <div><h1>The Maths Notebook</h1><p>Years 6 &ndash; 8 &middot; NZ</p></div>
     </a>
-    <div class="search">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input id="search" type="text" placeholder="Search a topic&hellip;" aria-label="Search topics">
-    </div>
-    <nav id="nav"></nav>
-  </aside>
+    <nav class="topnav" id="nav"></nav>
+    <button class="navtoggle" id="navtoggle" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
   <main class="main">
     <div class="inner">
 <section class="topic" id="statistics" style="--tcol:#B5405C">
@@ -591,10 +590,6 @@
     </div>
   </main>
 </div>
-<button class="navtoggle" id="navtoggle" aria-label="Open topics menu">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-</button>
-<div class="scrim" id="scrim"></div>
 <script src="../js/toc-data.js"></script>
 <script src="../js/progress-store.js"></script>
 <script src="../js/nav.js"></script>

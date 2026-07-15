@@ -53,7 +53,6 @@
       p.textContent = n + ' / ' + PS.QUESTIONS_PER_TOPIC;
       p.classList.toggle('full', n >= PS.QUESTIONS_PER_TOPIC);
     });
-    if (window.NavBar) window.NavBar.refreshTicks();
   }
 
   function restoreAnswers() {
@@ -78,12 +77,12 @@
     // Bookmark button
     var bmBtn = document.querySelector('.bookmark-btn');
     if (bmBtn) {
-      bmBtn.classList.toggle('on', PS.isBookmarked(topicId));
-      bmBtn.addEventListener('click', function () {
-        var on = PS.toggleBookmark(topicId);
+      var setBookmarkUi = function (on) {
         bmBtn.classList.toggle('on', on);
         bmBtn.innerHTML = on ? '★ Bookmarked' : '☆ Bookmark this chapter';
-      });
+      };
+      setBookmarkUi(PS.isBookmarked(topicId));
+      bmBtn.addEventListener('click', function () { setBookmarkUi(PS.toggleBookmark(topicId)); });
     }
 
     document.addEventListener('click', function (e) {

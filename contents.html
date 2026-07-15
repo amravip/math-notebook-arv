@@ -13,129 +13,147 @@
 </head>
 <body>
 <div class="wrap">
-  <aside class="sidebar" id="sidebar">
+  <header class="topbar">
     <a class="brandmark" href="index.html">
       <div class="glyph">&#8721;</div>
       <div><h1>The Maths Notebook</h1><p>Years 6 &ndash; 8 &middot; NZ</p></div>
     </a>
-    <div class="search">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input id="search" type="text" placeholder="Search a topic&hellip;" aria-label="Search topics">
-    </div>
-    <nav id="nav"></nav>
-  </aside>
+    <nav class="topnav" id="nav"></nav>
+    <button class="navtoggle" id="navtoggle" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
   <main class="main">
     <div class="inner">
 <h1 style="font-family:'Bricolage Grotesque';font-size:28px;margin:0 0 4px">Table of Contents</h1>
-<p class="hero p" style="margin-bottom:20px">24 chapters, grouped by strand. A filled tick in the sidebar (and a solid number here) means every question in that chapter has been answered.</p>
+<p class="hero p" style="margin-bottom:14px">24 chapters, grouped by strand. A solid number means every question in that chapter has been answered.</p>
+<div class="toc-search">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+  <input id="toc-search-input" type="text" placeholder="Search a topic&hellip;" aria-label="Search topics">
+</div>
 <div class="toc-strand" style="--strand:#3B4CA8">
     <h3>Number</h3>
-    <div class="toc-grid"><a class="toc-card" href="topics/place-value.html" data-tid="place-value">
+    <div class="toc-grid"><a class="toc-card" href="topics/place-value.html" data-tid="place-value" data-search="place value & whole numbers every digit has a value that depends on its position. moving one place left multiplies its value by 10 — the single rule our whole number system is built on.">
         <span class="toc-num">1</span>
         <span><span class="toc-name">Place Value & Whole Numbers</span><br><span class="toc-year">Year 6</span></span>
-      </a><a class="toc-card" href="topics/operations.html" data-tid="operations">
+      </a><a class="toc-card" href="topics/operations.html" data-tid="operations" data-search="operations & order (bedmas) when a calculation mixes +, −, ×, ÷ and brackets, everyone needs the same answer. bedmas fixes the order: brackets, exponents, division/multiplication (left→right), addition/subtraction (left→right).">
         <span class="toc-num">2</span>
         <span><span class="toc-name">Operations & Order (BEDMAS)</span><br><span class="toc-year">Year 6</span></span>
-      </a><a class="toc-card" href="topics/factors.html" data-tid="factors">
+      </a><a class="toc-card" href="topics/factors.html" data-tid="factors" data-search="factors, multiples & primes factors divide in exactly; multiples appear in the times-table; a prime has exactly two factors. these ideas power fraction simplifying, hcf and lcm.">
         <span class="toc-num">3</span>
         <span><span class="toc-name">Factors, Multiples & Primes</span><br><span class="toc-year">Year 6</span></span>
-      </a><a class="toc-card" href="topics/fractions.html" data-tid="fractions">
+      </a><a class="toc-card" href="topics/fractions.html" data-tid="fractions" data-search="fractions a fraction like 34 means '3 of 4 equal parts'. multiplying or dividing top and bottom by the same number gives an equal fraction — how we simplify, compare, add and subtract.">
         <span class="toc-num">4</span>
         <span><span class="toc-name">Fractions</span><br><span class="toc-year">Year 6</span></span>
-      </a><a class="toc-card" href="topics/decimals.html" data-tid="decimals">
+      </a><a class="toc-card" href="topics/decimals.html" data-tid="decimals" data-search="decimals decimals extend place value past the ones into tenths, hundredths and thousandths. they're just fractions with denominators 10, 100, 1000 in compact form.">
         <span class="toc-num">5</span>
         <span><span class="toc-name">Decimals</span><br><span class="toc-year">Year 6</span></span>
-      </a><a class="toc-card" href="topics/percentages.html" data-tid="percentages">
+      </a><a class="toc-card" href="topics/percentages.html" data-tid="percentages" data-search="percentages 'per cent' means 'out of 100'. a percentage is a fraction with denominator 100, so 25% = 25/100 = 1/4 — linking straight to fractions and decimals.">
         <span class="toc-num">6</span>
         <span><span class="toc-name">Percentages</span><br><span class="toc-year">Year 6</span></span>
-      </a><a class="toc-card" href="topics/ratios.html" data-tid="ratios">
+      </a><a class="toc-card" href="topics/ratios.html" data-tid="ratios" data-search="ratios & rates a ratio compares quantities of the same kind (2:3); a rate compares different kinds ($/kg, km/h). both are proportional thinking — scaling while keeping the relationship fixed.">
         <span class="toc-num">7</span>
         <span><span class="toc-name">Ratios & Rates</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/integers.html" data-tid="integers">
+      </a><a class="toc-card" href="topics/integers.html" data-tid="integers" data-search="integers (negatives) integers include negatives: …−3, −2, −1, 0, 1, 2, 3… they measure things below a reference point — temperatures, debts, depths — with clear rules for +, −, ×.">
         <span class="toc-num">8</span>
         <span><span class="toc-name">Integers (negatives)</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/powers.html" data-tid="powers">
+      </a><a class="toc-card" href="topics/powers.html" data-tid="powers" data-search="powers, roots & scientific notation an index is repeated multiplication: 2³ = 2×2×2. a square root undoes squaring. scientific notation writes very large/small numbers as a value between 1 and 10 times a power of 10.">
         <span class="toc-num">9</span>
         <span><span class="toc-name">Powers, Roots & Scientific Notation</span><br><span class="toc-year">Year 7</span></span>
       </a></div>
   </div>
 <div class="toc-strand" style="--strand:#7A3FB0">
     <h3>Algebra</h3>
-    <div class="toc-grid"><a class="toc-card" href="topics/patterns.html" data-tid="patterns">
+    <div class="toc-grid"><a class="toc-card" href="topics/patterns.html" data-tid="patterns" data-search="patterns & sequences a sequence is an ordered list following a rule. spotting the rule predicts any term without listing them all — the doorway to algebra.">
         <span class="toc-num">1</span>
         <span><span class="toc-name">Patterns & Sequences</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/expressions.html" data-tid="expressions">
+      </a><a class="toc-card" href="topics/expressions.html" data-tid="expressions" data-search="algebraic expressions a letter stands for an unknown or changing number. we collect like terms, expand brackets and substitute values — the grammar of algebra.">
         <span class="toc-num">2</span>
         <span><span class="toc-name">Algebraic Expressions</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/equations.html" data-tid="equations">
+      </a><a class="toc-card" href="topics/equations.html" data-tid="equations" data-search="linear equations an equation says two expressions are equal. solving finds the unknown that keeps the balance true — by doing the same to both sides.">
         <span class="toc-num">3</span>
         <span><span class="toc-name">Linear Equations</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/inequalities.html" data-tid="inequalities">
+      </a><a class="toc-card" href="topics/inequalities.html" data-tid="inequalities" data-search="inequalities an inequality (>, <, ≥, ≤) describes a range of values, not a single one. solving is almost identical to equations — with one crucial twist.">
         <span class="toc-num">4</span>
         <span><span class="toc-name">Inequalities</span><br><span class="toc-year">Year 8</span></span>
-      </a><a class="toc-card" href="topics/graphs.html" data-tid="graphs">
+      </a><a class="toc-card" href="topics/graphs.html" data-tid="graphs" data-search="coordinates & linear graphs the cartesian plane locates points with (x, y). a straight-line graph like y = 2x + 1 shows every point that makes the equation true.">
         <span class="toc-num">5</span>
         <span><span class="toc-name">Coordinates & Linear Graphs</span><br><span class="toc-year">Year 8</span></span>
       </a></div>
   </div>
 <div class="toc-strand" style="--strand:#1E8A8A">
     <h3>Geometry</h3>
-    <div class="toc-grid"><a class="toc-card" href="topics/angles.html" data-tid="angles">
+    <div class="toc-grid"><a class="toc-card" href="topics/angles.html" data-tid="angles" data-search="angles & angle relationships angles measure turn. a few facts unlock most problems: on a straight line they add to 180°, around a point to 360°, and in a triangle to 180°.">
         <span class="toc-num">1</span>
         <span><span class="toc-name">Angles & Angle Relationships</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/shapes.html" data-tid="shapes">
+      </a><a class="toc-card" href="topics/shapes.html" data-tid="shapes" data-search="triangles, quadrilaterals & polygons shapes are classified by sides and angles. the angle-sum rules let you find missing angles in any polygon.">
         <span class="toc-num">2</span>
         <span><span class="toc-name">Triangles, Quadrilaterals & Polygons</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/transformations.html" data-tid="transformations">
+      </a><a class="toc-card" href="topics/transformations.html" data-tid="transformations" data-search="transformations a transformation moves or resizes a shape: translation (slide), reflection (flip), rotation (turn), enlargement (scale). coordinates change predictably.">
         <span class="toc-num">3</span>
         <span><span class="toc-name">Transformations</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/pythagoras.html" data-tid="pythagoras">
+      </a><a class="toc-card" href="topics/pythagoras.html" data-tid="pythagoras" data-search="pythagoras' theorem in a right-angled triangle, the square of the hypotenuse equals the sum of the squares of the other two sides: a² + b² = c².">
         <span class="toc-num">4</span>
         <span><span class="toc-name">Pythagoras' Theorem</span><br><span class="toc-year">Year 8</span></span>
-      </a><a class="toc-card" href="topics/circles.html" data-tid="circles">
+      </a><a class="toc-card" href="topics/circles.html" data-tid="circles" data-search="circles every circle links its radius to two measures: circumference c = πd (distance around) and area a = πr² (space inside). π ≈ 3.14 is the same ratio for every circle.">
         <span class="toc-num">5</span>
         <span><span class="toc-name">Circles</span><br><span class="toc-year">Year 8</span></span>
       </a></div>
   </div>
 <div class="toc-strand" style="--strand:#C9791A">
     <h3>Measurement</h3>
-    <div class="toc-grid"><a class="toc-card" href="topics/perimeter-area.html" data-tid="perimeter-area">
+    <div class="toc-grid"><a class="toc-card" href="topics/perimeter-area.html" data-tid="perimeter-area" data-search="perimeter & area perimeter is the distance around a shape (add the sides). area is the space inside (in squares). compound shapes split into rectangles and triangles.">
         <span class="toc-num">1</span>
         <span><span class="toc-name">Perimeter & Area</span><br><span class="toc-year">Year 6</span></span>
-      </a><a class="toc-card" href="topics/volume.html" data-tid="volume">
+      </a><a class="toc-card" href="topics/volume.html" data-tid="volume" data-search="volume & surface area volume is the space inside a 3-d solid (cubic units). surface area is the total area of all faces. for a cuboid, volume = length × width × height.">
         <span class="toc-num">2</span>
         <span><span class="toc-name">Volume & Surface Area</span><br><span class="toc-year">Year 8</span></span>
-      </a><a class="toc-card" href="topics/conversions.html" data-tid="conversions">
+      </a><a class="toc-card" href="topics/conversions.html" data-tid="conversions" data-search="units, conversions & rates metric units scale by powers of 10 (1 km = 1000 m). compound measures like speed combine two quantities (distance ÷ time), and one triangle relationship finds any of the three.">
         <span class="toc-num">3</span>
         <span><span class="toc-name">Units, Conversions & Rates</span><br><span class="toc-year">Year 7</span></span>
       </a></div>
   </div>
 <div class="toc-strand" style="--strand:#B5405C">
     <h3>Statistics & Probability</h3>
-    <div class="toc-grid"><a class="toc-card" href="topics/statistics.html" data-tid="statistics">
+    <div class="toc-grid"><a class="toc-card" href="topics/statistics.html" data-tid="statistics" data-search="data & averages statistics summarise data. the mean (add ÷ count), median (middle in order) and mode (most common) describe the centre; the range (max − min) describes spread.">
         <span class="toc-num">1</span>
         <span><span class="toc-name">Data & Averages</span><br><span class="toc-year">Year 7</span></span>
-      </a><a class="toc-card" href="topics/probability.html" data-tid="probability">
+      </a><a class="toc-card" href="topics/probability.html" data-tid="probability" data-search="probability probability measures how likely an event is, from 0 (impossible) to 1 (certain). for equally likely outcomes it's favourable ÷ total.">
         <span class="toc-num">2</span>
         <span><span class="toc-name">Probability</span><br><span class="toc-year">Year 8</span></span>
       </a></div>
   </div>
+<p class="muted" id="toc-empty" style="display:none;color:var(--ink-soft)">No topics match that search.</p>
 <script>
 (function(){
-  if(!window.ProgressStore) return;
-  document.querySelectorAll('.toc-card').forEach(function(a){
-    var n = window.ProgressStore.topicAnsweredCount(a.dataset.tid);
-    a.classList.toggle('done', n >= window.ProgressStore.QUESTIONS_PER_TOPIC);
+  if(window.ProgressStore){
+    document.querySelectorAll('.toc-card').forEach(function(a){
+      var n = window.ProgressStore.topicAnsweredCount(a.dataset.tid);
+      a.classList.toggle('done', n >= window.ProgressStore.QUESTIONS_PER_TOPIC);
+    });
+  }
+  var input = document.getElementById('toc-search-input');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.toc-card'));
+  var strandsEl = Array.prototype.slice.call(document.querySelectorAll('.toc-strand'));
+  input.addEventListener('input', function(){
+    var q = input.value.trim().toLowerCase();
+    var anyVisible = false;
+    cards.forEach(function(c){
+      var show = !q || c.dataset.search.indexOf(q) !== -1;
+      c.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
+    strandsEl.forEach(function(g){
+      var any = Array.prototype.some.call(g.querySelectorAll('.toc-card'), function(c){ return c.style.display !== 'none'; });
+      g.style.display = any ? '' : 'none';
+    });
+    document.getElementById('toc-empty').style.display = anyVisible ? 'none' : 'block';
   });
 })();
 </script>
     </div>
   </main>
 </div>
-<button class="navtoggle" id="navtoggle" aria-label="Open topics menu">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-</button>
-<div class="scrim" id="scrim"></div>
 <script src="js/toc-data.js"></script>
 <script src="js/progress-store.js"></script>
 <script src="js/nav.js"></script>
