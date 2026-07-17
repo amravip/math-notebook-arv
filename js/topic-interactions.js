@@ -17,12 +17,39 @@
     var x = String(s).toLowerCase().trim().replace(/\s+/g, '');
     x = x.replace(/[°º²³]/g, '').replace(/,/g, '').replace(/π/g, 'pi');
     x = x.replace(/squared|cubed/g, '');
+    x = x.replace(/\$/g, '');       // "$51" and "51" are the same answer
     x = x.replace(/centimet(re|er)s?|millimet(re|er)s?|met(re|er)s?/g, '');
     x = x.replace(/cm|mm/g, '').replace(/units?/g, '').replace(/degrees?|deg/g, '');
+    x = x.replace(/times/g, '');    // "10 times" answers "how many times bigger" as validly as "10"
     x = x.replace(/(\d)m$/, '$1');
     x = x.replace(/gradient=|^[a-z]=/, '');
     return x;
   }
+
+  // Multi-part answers ("$18 and $27", "9600 and 10 000", "1/6 and 1/2"): split into ordered parts
+  // so "18, 27", "18 and 27" and "18 27" all match. Parts are compared in order (ordering questions
+  // stay strict), letters-only fragments like a stray unit "m" are dropped, and "10 000"/"10,000"
+  // style thousands groupings are joined BEFORE splitting so they don't read as two parts.
+  function normParts(s) {
+    var x = String(s).toLowerCase().trim();
+    x = x.replace(/[°º²³()]/g, '').replace(/\$/g, '').replace(/π/g, 'pi');
+    x = x.replace(/(\d)[ ,](?=\d\d\d(\D|$))/g, '$1');
+    return x.split(/(?:and|[,;&\s])+/).filter(function (p) { return p && !/^[a-z%]+$/.test(p); });
+  }
+  function partsMatch(iParts, aParts) {
+    if (aParts.length < 2 || iParts.length !== aParts.length) return false;
+    for (var k = 0; k < aParts.length; k++) {
+      var a = aParts[k], b = iParts[k];
+      if (a === b) continue;
+      // Exact numeric equality only (handles "376.80" vs "376.8"). No rounding tolerance here:
+      // ordering questions have neighbouring parts as close as 0.02 apart, so any slack would
+      // accept a wrongly-ordered list.
+      var fa = parseFloat(a), fb = parseFloat(b);
+      if (isNaN(fa) || isNaN(fb) || Math.abs(fa - fb) > 1e-9) return false;
+    }
+    return true;
+  }
+
   function isCorrect(input, acceptRaw) {
     var n = normAns(input); if (!n) return false;
     var acc = acceptRaw.map(normAns);
@@ -31,6 +58,8 @@
       var f = parseFloat(n);
       for (var i = 0; i < acc.length; i++) { var af = parseFloat(acc[i]); if (!isNaN(af) && Math.abs(af - f) < 0.06) return true; }
     }
+    var ip = normParts(input);
+    for (var j = 0; j < acceptRaw.length; j++) { if (partsMatch(ip, normParts(acceptRaw[j]))) return true; }
     return false;
   }
   window.TopicEngine = { normAns: normAns, isCorrect: isCorrect, getCheckMap: CHECK };
@@ -57,14 +86,24 @@
 
   function restoreAnswers() {
     var state = PS.load();
+    var healed = false;
     document.querySelectorAll('.ex').forEach(function (ex) {
       var k = ex.dataset.key, v = state.answers[k];
       if (v !== undefined && v !== '') {
-        var verdict = state.results[k];
-        if (!verdict) { var meta = CHECK()[k]; verdict = meta ? (isCorrect(v, meta) ? 'correct' : 'wrong') : 'answered'; }
+        var stored = state.results[k], meta = CHECK()[k];
+        // Re-mark against the CURRENT checking rules rather than trusting the stored verdict, so
+        // answers mis-marked under older, stricter rules (e.g. "18, 27" for "$18 and $27") heal
+        // themselves on the next visit — including the XP the learner should have earned.
+        var verdict = meta ? (isCorrect(v, meta) ? 'correct' : 'wrong') : (stored || 'answered');
+        if (meta && stored && stored !== verdict) {
+          state.results[k] = verdict;
+          if (verdict === 'correct') PS.addXp(10);
+          healed = true;
+        }
         applyMark(ex, v, verdict);
       }
     });
+    if (healed) PS.save();
     updateChapterProgress();
   }
 
