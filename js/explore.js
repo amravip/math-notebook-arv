@@ -146,21 +146,23 @@
     },
 
     integers: {
-      kind: 'slider', intro: 'Adding is movement: start somewhere, then walk the number line.',
+      kind: 'slider', intro: 'Adding and subtracting are movement. Try subtracting a negative and watch which way you walk.',
       sliders: [
-        { id: 's', label: 'Start at', min: -10, max: 10, step: 1, val: -5 },
-        { id: 'c', label: 'Add', min: -10, max: 10, step: 1, val: 8 }
+        { id: 's', label: 'Start at', min: -10, max: 10, step: 1, val: 5 },
+        { id: 'op', label: 'Operation', min: 0, max: 1, step: 1, val: 1, fmt: function (i) { return i ? 'subtract' : 'add'; } },
+        { id: 'n', label: 'Number', min: -10, max: 10, step: 1, val: -3 }
       ],
       render: function (v) {
-        var r = v.s + v.c, W = 320, X = function (n) { return 160 + n * 7.6; };
+        var eff = v.op ? -v.n : v.n, r = v.s + eff, W = 320, X = function (n) { return 160 + n * 7.6; };
+        var nstr = v.n < 0 ? '(&minus;' + (-v.n) + ')' : '' + v.n, effstr = eff < 0 ? '(&minus;' + (-eff) + ')' : '' + eff;
         var g = '<line x1="' + X(-20) + '" y1="30" x2="' + X(20) + '" y2="30" stroke="' + SOFT + '" stroke-width="1.5"/>';
         for (var i = -20; i <= 20; i += 5) g += '<line x1="' + X(i) + '" y1="25" x2="' + X(i) + '" y2="35" stroke="' + SOFT + '"/>' + txt(X(i), 50, i, 'middle', 10, SOFT);
         g += '<defs><marker id="exArr" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="' + BRAND + '"/></marker></defs>';
-        if (v.c !== 0) g += '<path d="M' + X(v.s) + ',18 Q' + ((X(v.s) + X(r)) / 2) + ',2 ' + X(r) + ',18" fill="none" stroke="' + BRAND + '" stroke-width="2" marker-end="url(#exArr)"/>';
+        if (eff !== 0) g += '<path d="M' + X(v.s) + ',18 Q' + ((X(v.s) + X(r)) / 2) + ',2 ' + X(r) + ',18" fill="none" stroke="' + BRAND + '" stroke-width="2" marker-end="url(#exArr)"/>';
         g += '<circle cx="' + X(v.s) + '" cy="30" r="5" fill="' + MARI + '" stroke="' + INK + '"/><circle cx="' + X(r) + '" cy="30" r="5" fill="' + BRAND + '"/>';
-        return svg(W, 56, g, 'number line jump from ' + v.s + ' to ' + r) +
-          cap(v.s + ' + ' + (v.c < 0 ? '(&minus;' + (-v.c) + ')' : v.c) + ' = ' + r) +
-          note(v.c < 0 ? 'A negative addition walks left.' : v.c === 0 ? 'Adding zero goes nowhere.' : 'A positive addition walks right.');
+        var expr = v.op ? v.s + ' &minus; ' + nstr + ' = ' + v.s + ' + ' + effstr + ' = ' + r : v.s + ' + ' + nstr + ' = ' + r;
+        return svg(W, 56, g, 'number line jump from ' + v.s + ' to ' + r) + cap(expr) +
+          note(v.op && v.n < 0 ? 'Subtracting a negative ADDS — the two minus signs make a plus, so you walk right.' : eff === 0 ? 'A move of zero goes nowhere.' : eff < 0 ? 'This walks left along the line.' : 'This walks right along the line.');
       }
     },
 
@@ -420,8 +422,8 @@
         g += '<line x1="' + X(mean) + '" y1="8" x2="' + X(mean) + '" y2="34" stroke="' + BAD + '" stroke-dasharray="3 3" stroke-width="1.5"/>';
         g += '<line x1="' + X(3) + '" y1="8" x2="' + X(3) + '" y2="10" stroke="' + GOOD + '" stroke-width="3"/>';
         return svg(320, 58, g, 'dot plot of 2, 3, 3 and ' + v.x + ' with the mean marked') +
-          cap('Data: 2, 3, 3, ' + v.x + ' &nbsp;&rarr;&nbsp; mean = ' + mean.toFixed(2) + ' &nbsp;|&nbsp; median = 3') +
-          note('Drag the outlier to 50: the mean chases it across the line; the median never moves.');
+          cap('Data: 2, 3, 3, ' + v.x + ' &nbsp;&rarr;&nbsp; mean ' + mean.toFixed(2) + ' &nbsp;|&nbsp; median 3 &nbsp;|&nbsp; mode 3 &nbsp;|&nbsp; range ' + (v.x - 2)) +
+          note('Drag the outlier to 50: the mean chases it and the range grows (spread), but the median and mode never move (centre).');
       }
     },
 
