@@ -60,6 +60,16 @@
     g += '<text class="fig-txt ang" text-anchor="middle" x="' + C[0] + '" y="' + (C[1] + 24) + '">' + cc + '</text>';
     return '<svg class="viz" viewBox="0 0 ' + W + ' ' + H + '" width="225" role="img" aria-label="triangle with angles">' + g + '</svg>';
   }
+  // A triangle with its base extended beyond one vertex, for exterior-angle questions.
+  function extTriFig(a, b) {
+    var W = 250, H = 160, A = [30, 135], B = [188, 135], C = [100, 26], E = [236, 135];
+    var g = '<polygon class="fig-shape" points="' + A[0] + ',' + A[1] + ' ' + B[0] + ',' + B[1] + ' ' + C[0] + ',' + C[1] + '"/>';
+    g += '<line class="fig-line" x1="' + B[0] + '" y1="' + B[1] + '" x2="' + E[0] + '" y2="' + E[1] + '"/>';
+    g += '<text class="fig-txt ang" x="' + (A[0] + 15) + '" y="' + (A[1] - 11) + '">' + a + '</text>';
+    g += '<text class="fig-txt ang" text-anchor="end" x="' + (B[0] - 22) + '" y="' + (B[1] - 11) + '">' + b + '</text>';
+    g += '<text class="fig-txt ang" x="' + (B[0] + 10) + '" y="' + (B[1] - 11) + '">x</text>';
+    return '<svg class="viz" viewBox="0 0 ' + W + ' ' + H + '" width="245" role="img" aria-label="triangle with an exterior angle">' + g + '</svg>';
+  }
   function polyFig(n) {
     var S = 150, c = S / 2, r = 52, pts = [];
     for (var i = 0; i < n; i++) { var a = -Math.PI / 2 + i * 2 * Math.PI / n; pts.push((c + r * Math.cos(a)).toFixed(1) + ',' + (c + r * Math.sin(a)).toFixed(1)); }
@@ -100,6 +110,31 @@
     var s2 = start; vals.forEach(function (v, i2) { var p = P(s2 + v / 2, len * 0.55); g += '<text class="fig-txt ang" text-anchor="middle" x="' + p[0] + '" y="' + (p[1] + 4) + '">' + labels[i2] + '</text>'; s2 += v; });
     return '<svg class="viz" viewBox="0 0 ' + S + ' ' + S + '" width="185" role="img" aria-label="angles around a point">' + g + '</svg>';
   }
+  // Two straight lines crossing at a point; xDeg positions the 'x' label (a/2+180 for the vertically
+  // opposite wedge, (a+180)/2 for an adjacent wedge) around the crossing so it matches the fact used.
+  function crossFig(a, xDeg) {
+    var S = 190, c = S / 2, len = 78;
+    var P = function (deg, rr) { var rad = deg * Math.PI / 180; return [+(c + rr * Math.cos(rad)).toFixed(1), +(c - rr * Math.sin(rad)).toFixed(1)]; };
+    var e1 = P(0, len), e2 = P(180, len), e3 = P(a, len), e4 = P(a + 180, len);
+    var g = '<line class="fig-line" x1="' + e1[0] + '" y1="' + e1[1] + '" x2="' + e2[0] + '" y2="' + e2[1] + '"/>';
+    g += '<line class="fig-line" x1="' + e3[0] + '" y1="' + e3[1] + '" x2="' + e4[0] + '" y2="' + e4[1] + '"/>';
+    g += '<circle class="fig-pt" cx="' + c + '" cy="' + c + '" r="3"/>';
+    var la = P(a / 2, 46), lx = P(xDeg, 46);
+    g += '<text class="fig-txt ang" text-anchor="middle" x="' + la[0] + '" y="' + (la[1] + 4) + '">' + a + '°</text>';
+    g += '<text class="fig-txt ang" text-anchor="middle" x="' + lx[0] + '" y="' + (lx[1] + 4) + '">x</text>';
+    return '<svg class="viz" viewBox="0 0 ' + S + ' ' + S + '" width="185" role="img" aria-label="two crossing straight lines">' + g + '</svg>';
+  }
+  // Two horizontal parallel lines cut by a transversal; kind picks which named angle 'x' marks.
+  function parallelFig(kind) {
+    var W = 230, H = 170, T = [94, 50], B = [151, 120];
+    var g = '<line class="fig-ax" x1="20" y1="' + T[1] + '" x2="210" y2="' + T[1] + '"/><line class="fig-ax" x1="20" y1="' + B[1] + '" x2="210" y2="' + B[1] + '"/>';
+    g += '<line class="fig-line" x1="70" y1="15" x2="175" y2="155"/>';
+    g += '<circle class="fig-pt" cx="' + T[0] + '" cy="' + T[1] + '" r="3"/><circle class="fig-pt" cx="' + B[0] + '" cy="' + B[1] + '" r="3"/>';
+    g += '<text class="fig-txt ang" x="' + (T[0] + 8) + '" y="' + (T[1] - 8) + '">a</text>';
+    var xp = kind === 'corr' ? [B[0] + 8, B[1] - 8] : kind === 'alt' ? [B[0] - 24, B[1] + 18] : [B[0] + 8, B[1] + 18];
+    g += '<text class="fig-txt ang" x="' + xp[0] + '" y="' + xp[1] + '">x</text>';
+    return '<svg class="viz" viewBox="0 0 ' + W + ' ' + H + '" width="225" role="img" aria-label="parallel lines cut by a transversal">' + g + '</svg>';
+  }
   function quadFig(a, b, cc, dd) {
     var W = 230, H = 160, A = [34, 120], B = [196, 132], C = [184, 30], D = [58, 24];
     var g = '<polygon class="fig-shape" points="' + A[0] + ',' + A[1] + ' ' + B[0] + ',' + B[1] + ' ' + C[0] + ',' + C[1] + ' ' + D[0] + ',' + D[1] + '"/>';
@@ -113,6 +148,7 @@
     var S = 170, c = S / 2, R = 58;
     var g = '<circle class="fig-shape" cx="' + c + '" cy="' + c + '" r="' + R + '"/><circle class="fig-pt" cx="' + c + '" cy="' + c + '" r="3"/>';
     if (kind === 'd') { g += '<line class="fig-line" x1="' + (c - R) + '" y1="' + c + '" x2="' + (c + R) + '" y2="' + c + '"/><text class="fig-txt" text-anchor="middle" x="' + c + '" y="' + (c - 7) + '">' + label + '</text>'; }
+    else if (kind === 'c' || kind === 'a') { g += '<text class="fig-txt" text-anchor="middle" x="' + c + '" y="' + (S - 6) + '">' + label + '</text>'; }
     else { g += '<line class="fig-line" x1="' + c + '" y1="' + c + '" x2="' + (c + R) + '" y2="' + c + '"/><text class="fig-txt" text-anchor="middle" x="' + (c + R / 2) + '" y="' + (c - 7) + '">' + label + '</text>'; }
     return '<svg class="viz" viewBox="0 0 ' + S + ' ' + S + '" width="165" role="img" aria-label="circle">' + g + '</svg>';
   }
@@ -125,28 +161,65 @@
   var GEN = {
     graphs: {
       easy: function (r) {
-        var x = 0, y = 0; while (x === 0) x = ri(r, -6, 6); while (y === 0) y = ri(r, -6, 6);
-        var q = x > 0 && y > 0 ? 1 : x < 0 && y > 0 ? 2 : x < 0 && y < 0 ? 3 : 4;
-        return { q: 'In which quadrant does the point ' + M('(' + x + ', ' + y + ')') + ' lie? <span class="muted">(Answer 1, 2, 3 or 4.)</span>',
-          fig: coordPlane(6, [{ x: x, y: y, label: 'P' }]),
-          steps: ['Read the signs: x = ' + M(x) + ' is ' + (x > 0 ? 'positive' : 'negative') + ', y = ' + M(y) + ' is ' + (y > 0 ? 'positive' : 'negative') + '.',
-            'Quadrants run anticlockwise from top-right: I (+,+), II (−,+), III (−,−), IV (+,−).',
-            'So the point lies in Quadrant ' + M(ROMAN[q]) + '.'],
-          ans: M('Quadrant ' + ROMAN[q] + ' (' + q + ')'), accept: [String(q), ROMAN[q], 'quadrant' + q, 'quadrant' + ROMAN[q]] };
+        if (pick(r, ['quad', 'read']) === 'quad') {
+          var x = 0, y = 0; while (x === 0) x = ri(r, -6, 6); while (y === 0) y = ri(r, -6, 6);
+          var q = x > 0 && y > 0 ? 1 : x < 0 && y > 0 ? 2 : x < 0 && y < 0 ? 3 : 4;
+          return { q: 'In which quadrant does the point ' + M('(' + x + ', ' + y + ')') + ' lie? <span class="muted">(Answer 1, 2, 3 or 4.)</span>',
+            fig: coordPlane(6, [{ x: x, y: y, label: 'P' }]),
+            steps: ['Read the signs: x = ' + M(x) + ' is ' + (x > 0 ? 'positive' : 'negative') + ', y = ' + M(y) + ' is ' + (y > 0 ? 'positive' : 'negative') + '.',
+              'Quadrants run anticlockwise from top-right: I (+,+), II (−,+), III (−,−), IV (+,−).',
+              'So the point lies in Quadrant ' + M(ROMAN[q]) + '.'],
+            ans: M('Quadrant ' + ROMAN[q] + ' (' + q + ')'), accept: [String(q), ROMAN[q], 'quadrant' + q, 'quadrant' + ROMAN[q]] };
+        }
+        var px = ri(r, -6, 6), py = ri(r, -6, 6);
+        return { q: 'What are the coordinates of point ' + M('P') + '?', fig: coordPlane(6, [{ x: px, y: py, label: 'P' }]),
+          steps: ['Read across from the origin to find x, then up or down to find y.', 'P is at ' + M('(' + px + ', ' + py + ')') + '.'],
+          ans: M('(' + px + ', ' + py + ')'), accept: coordAcc(px, py) };
       },
       medium: function (r) {
-        var m = ri(r, 2, 5), c = ri(r, -5, 6), xk = ri(r, -4, 5), y = m * xk + c, cs = c >= 0 ? '+ ' + c : '− ' + (-c);
+        var m = ri(r, 2, 5), c = ri(r, -5, 6), R = 8;
+        var loXk = Math.max(-6, Math.ceil((-R - c) / m)), hiXk = Math.min(6, Math.floor((R - c) / m));
+        var xk = ri(r, loXk, hiXk), y = m * xk + c, cs = c >= 0 ? '+ ' + c : '− ' + (-c);
+        var xStart = Math.max(-R, (-R - c) / m), xEnd = Math.min(R, (R - c) / m);
         return { q: 'For the line ' + M('y = ' + m + 'x ' + cs) + ', find ' + M('y') + ' when ' + M('x = ' + xk) + '.',
+          fig: coordPlane(R, [{ x: xk, y: y, label: 'P' }], { lines: [{ x1: xStart, y1: m * xStart + c, x2: xEnd, y2: m * xEnd + c }] }),
           steps: ['Substitute x = ' + M(xk) + ':  y = ' + m + '×' + xk + ' ' + cs + '.', 'y = ' + M(m * xk) + ' ' + cs + ' = ' + M(y) + '.'],
           ans: M('y = ' + y), accept: [String(y)] };
       },
       hard: function (r) {
-        var x1, x2, s, y1, y2, g = 0;
-        do { x1 = ri(r, -4, 2); x2 = ri(r, x1 + 1, 4); s = pick(r, [-2, -1, 1, 2, 3]); y1 = ri(r, -3, 3); y2 = y1 + s * (x2 - x1); g++; } while ((Math.abs(y2) > 6) && g < 50);
-        return { q: 'Find the gradient of the line through ' + M('(' + x1 + ', ' + y1 + ')') + ' and ' + M('(' + x2 + ', ' + y2 + ')') + '.',
-          fig: coordPlane(6, [{ x: x1, y: y1, label: 'A' }, { x: x2, y: y2, label: 'B' }], { lines: [{ x1: x1, y1: y1, x2: x2, y2: y2 }] }),
-          steps: ['Gradient = rise ÷ run = (y₂ − y₁) ÷ (x₂ − x₁).', '= (' + y2 + ' − ' + y1 + ') ÷ (' + x2 + ' − ' + x1 + ') = ' + M(y2 - y1) + ' ÷ ' + M(x2 - x1) + '.', '= ' + M(s) + '.'],
-          ans: M('gradient = ' + s), accept: [String(s)] };
+        var branch = pick(r, ['grad', 'eqpts', 'eqgi']);
+        if (branch === 'grad') {
+          var x1, x2, s, y1, y2, g = 0;
+          do { x1 = ri(r, -4, 2); x2 = ri(r, x1 + 1, 4); s = pick(r, [-2, -1, 1, 2, 3]); y1 = ri(r, -3, 3); y2 = y1 + s * (x2 - x1); g++; } while ((Math.abs(y2) > 6) && g < 50);
+          return { q: 'Find the gradient of the line through ' + M('(' + x1 + ', ' + y1 + ')') + ' and ' + M('(' + x2 + ', ' + y2 + ')') + '.',
+            fig: coordPlane(6, [{ x: x1, y: y1, label: 'A' }, { x: x2, y: y2, label: 'B' }], { lines: [{ x1: x1, y1: y1, x2: x2, y2: y2 }] }),
+            steps: ['Gradient = rise ÷ run = (y₂ − y₁) ÷ (x₂ − x₁).', '= (' + y2 + ' − ' + y1 + ') ÷ (' + x2 + ' − ' + x1 + ') = ' + M(y2 - y1) + ' ÷ ' + M(x2 - x1) + '.', '= ' + M(s) + '.'],
+            ans: M('gradient = ' + s), accept: [String(s)] };
+        }
+        var m2 = pick(r, [-3, -2, -1, 1, 2, 3]), c2 = ri(r, -6, 6), R2 = 9;
+        var b1 = (-R2 - c2) / m2, b2 = (R2 - c2) / m2;
+        var loB = Math.max(-6, Math.ceil(Math.min(b1, b2))), hiB = Math.min(6, Math.floor(Math.max(b1, b2)));
+        var mTerm = m2 === 1 ? 'x' : m2 === -1 ? '-x' : m2 + 'x', cTerm = c2 === 0 ? '' : (c2 > 0 ? '+' + c2 : String(c2));
+        var full = 'y=' + mTerm + cTerm, alt = mTerm + cTerm;
+        var prettyM = m2 === 1 ? 'x' : m2 === -1 ? '−x' : (m2 < 0 ? '−' + (-m2) + 'x' : m2 + 'x');
+        var prettyC = c2 === 0 ? '' : (c2 > 0 ? ' + ' + c2 : ' − ' + (-c2));
+        var eqDisplay = 'y = ' + prettyM + prettyC;
+        if (branch === 'eqpts') {
+          var xa = ri(r, loB, hiB - 1), xb = ri(r, xa + 1, hiB), ya = m2 * xa + c2, yb = m2 * xb + c2;
+          return { q: 'A straight line passes through ' + M('(' + xa + ', ' + ya + ')') + ' and ' + M('(' + xb + ', ' + yb + ')') + '. Find the equation of the line in the form ' + M('y = mx + c') + '.',
+            fig: coordPlane(R2, [{ x: xa, y: ya, label: 'A' }, { x: xb, y: yb, label: 'B' }], { lines: [{ x1: xa, y1: ya, x2: xb, y2: yb }] }),
+            steps: ['Gradient m = (y₂ − y₁) ÷ (x₂ − x₁) = (' + yb + ' − ' + ya + ') ÷ (' + xb + ' − ' + xa + ') = ' + M(m2) + '.',
+              'Substitute one point into y = mx + c to find c: ' + ya + ' = ' + m2 + '×' + xa + ' + c, so c = ' + M(c2) + '.',
+              'Equation: ' + M(eqDisplay) + '.'],
+            ans: M(eqDisplay), accept: [full, alt] };
+        }
+        var xc = ri(r, loB, hiB), yc = m2 * xc + c2;
+        return { q: 'A straight line has gradient ' + M(m2) + ' and passes through ' + M('(' + xc + ', ' + yc + ')') + '. Find the equation of the line in the form ' + M('y = mx + c') + '.',
+          fig: coordPlane(R2, [{ x: xc, y: yc, label: 'A' }]),
+          steps: ['Substitute the point into y = mx + c: ' + yc + ' = ' + m2 + '×' + xc + ' + c.',
+            'So c = ' + yc + ' − (' + m2 + '×' + xc + ') = ' + M(c2) + '.',
+            'Equation: ' + M(eqDisplay) + '.'],
+          ans: M(eqDisplay), accept: [full, alt] };
       }
     },
     angles: {
