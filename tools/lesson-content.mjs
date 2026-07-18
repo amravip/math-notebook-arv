@@ -130,10 +130,11 @@ export const LESSON_EXPANSIONS = {
   <li>The <span class="term">sample space</span> is the full list of equally likely outcomes for an experiment &mdash; get this list right before calculating anything.</li>
   <li>For equally likely outcomes: <span class="term">P(event) = favourable outcomes &divide; total outcomes</span>.</li>
   <li>The complement rule: P(not A) = 1 &minus; P(A) &mdash; this often turns a hard "at least one" question into an easy one.</li>
+  <li>For two events together, "<span class="hl">AND</span>" multiplies and "<span class="hl">OR</span>" adds &mdash; but mind the conditions: multiply only when the events are <span class="term">independent</span> (one doesn't affect the other), add only when they cannot both happen at once. Two separate coins both landing heads: &frac12; &times; &frac12; = &frac14;, matching HH being 1 of the 4 equally likely outcomes.</li>
   <li>A probability is not tested by one trial. "30% chance of rain" not raining doesn't make the forecast wrong &mdash; probabilities are checked over <em>many</em> repeats, comparing the predicted probability to the <span class="term">relative frequency</span> (how often it actually happened).</li>
   <li>Each toss, roll or spin is independent of the last. If a coin has landed tails five times running, heads is still exactly 50% likely next time &mdash; it is never "due".</li>
 </ul>
-<div class="kbox"><span class="kbox-tag">Core formulas</span><span class="formula">P(event) = favourable &divide; total<br>P(not A) = 1 &minus; P(A)</span></div>
+<div class="kbox"><span class="kbox-tag">Core formulas</span><span class="formula">P(event) = favourable &divide; total<br>P(not A) = 1 &minus; P(A)<br>independent AND: &times; &nbsp;|&nbsp; exclusive OR: +</span></div>
 <div class="rw-examples">
   <div class="rw-card">
     <span class="rw-tag">&#127922; Rolling two dice</span>
@@ -259,6 +260,8 @@ export const LESSON_EXPANSIONS = {
   <li>Surface area is the material needed to wrap or cover a solid completely &mdash; the sum of every face's area. Unfold a box flat and you get its <span class="term">net</span>: every face laid out where you can see and add up all six at once.</li>
   <li>A cuboid's 6 faces come in <b>3 matching pairs</b> (top&amp;bottom, front&amp;back, left&amp;right) &mdash; find one area from each pair, add the three, then double the total.</li>
   <li>Scaling a 3-D shape affects volume differently to area: double every edge of a cube and its volume becomes <b>8 times</b> bigger (2&sup3;), not 2 times.</li>
+  <li>To find a side length back from a volume you <span class="term">undo the cube</span> (a cube root): try whole numbers until one fits. For volume 64 cm&sup3;: 3&times;3&times;3 = 27 (too small), 4&times;4&times;4 = 64 &mdash; so the side is <span class="hl">4 cm</span>.</li>
+  <li>Capacity links straight to volume: a cube 10 cm on every side holds 10&times;10&times;10 = 1000 cm&sup3;, and that amount is defined as <span class="hl">1 litre</span>.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Prism &amp; capacity</span><span class="formula">V = base area &times; height<br>1 litre = 1000 cm&sup3;</span></div>
 <div class="rw-examples">
@@ -463,8 +466,8 @@ export const LESSON_EXPANSIONS = {
 <ul class="def-list">
   <li>Index law: when multiplying powers with the same base, <em>add</em> the exponents, never multiply them &mdash; a&#8319; &times; a&#7480; = a&#8319;&#8314;&#7480;. So 2&sup3; &times; 2&sup2; = 2&#8309; = 32, not 2&#8310; = 64.</li>
   <li>A <span class="hl">square root</span> undoes squaring &mdash; it asks "what number, multiplied by itself, gives this value?"</li>
-  <li>Any base to the power 0 equals 1 (a&#8304; = 1) &mdash; a direct result of the same product rule.</li>
-  <li><span class="hl teal">Scientific notation</span> writes very large or very small numbers compactly, as a value between 1 and 10 multiplied by a power of 10.</li>
+  <li>Any base to the power 0 equals 1 (a&#8304; = 1). See <em>why</em> by dividing down: 2&sup3; = 8, 2&sup2; = 4, 2&sup1; = 2 &mdash; each step halves, so 2&#8304; = 2 &divide; 2 = <span class="hl">1</span>.</li>
+  <li><span class="hl teal">Scientific notation</span> writes very large or very small numbers compactly, as a value between 1 and 10 times a power of 10. Large numbers use a positive power (150,000,000 = 1.5 &times; 10&#8312;); numbers <em>smaller than 1</em> use a negative power &mdash; 0.0045 = <span class="hl">4.5 &times; 10&#8315;&sup3;</span> (the point moves 3 places right to make 4.5, so the exponent is &minus;3). The leading digit is always 1&ndash;10, so every number has exactly one form.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Index laws</span><span class="formula">a&#8319; &times; a&#7480; = a&#8319;&#8314;&#7480;<br>(a&#8319;)&#7480; = a&#8319;&#7480;<br>a&#8304; = 1</span></div>
 <div class="rw-examples">
@@ -623,8 +626,9 @@ export const LESSON_EXPANSIONS = {
   <li>A percentage is always taken <em>of</em> a particular amount, called the base. Change the base, and the same percentage becomes a different actual amount.</li>
   <li>Percentage changes do not simply add: a 10% rise followed by a 10% fall does <em>not</em> return you to the start, because the second 10% is of a different amount.</li>
   <li><span class="term">Working backwards:</span> if you know the price <em>after</em> a discount and need the original, the sale price is not 100% &mdash; it is (100 &minus; discount)% of the original. Divide by that percentage (as a decimal) to undo it.</li>
+  <li>To find the <em>whole</em> when you know a percentage of it, use the <span class="term">1% method</span>: divide by that percentage to get 1%, then multiply by 100. If 15% of a number is 45, then 1% = 45 &divide; 15 = 3, so 100% = <span class="hl">300</span>.</li>
 </ul>
-<div class="kbox"><span class="kbox-tag">Core moves</span><span class="formula">% of amount = (% &divide; 100) &times; amount<br>change is measured against the ORIGINAL</span></div>
+<div class="kbox"><span class="kbox-tag">Core moves</span><span class="formula">% of amount = (% &divide; 100) &times; amount<br>whole from a part: &divide; by the % to get 1%, &times; 100<br>change is measured against the ORIGINAL</span></div>
 <div class="rw-examples">
   <div class="rw-card">
     <span class="rw-tag">&#127991;&#65039; Shop sale</span>
