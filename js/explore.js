@@ -36,18 +36,32 @@
   var EXPLORES = {
 
     'place-value': {
-      kind: 'slider', intro: 'Build a number digit by digit — watch what each position is worth.',
+      kind: 'slider', intro: 'Build a number digit by digit, then see where it rounds to on the number line.',
       sliders: [
         { id: 'th', label: 'Thousands', min: 0, max: 9, step: 1, val: 4 },
-        { id: 'h', label: 'Hundreds', min: 0, max: 9, step: 1, val: 0 },
+        { id: 'h', label: 'Hundreds', min: 0, max: 9, step: 1, val: 3 },
         { id: 't', label: 'Tens', min: 0, max: 9, step: 1, val: 7 },
-        { id: 'o', label: 'Ones', min: 0, max: 9, step: 1, val: 3 }
+        { id: 'o', label: 'Ones', min: 0, max: 9, step: 1, val: 6 },
+        { id: 'rp', label: 'Round to nearest', min: 1, max: 3, step: 1, val: 2, fmt: function (x) { return [10, 100, 1000][x - 1]; } }
       ],
       render: function (v) {
         var n = 1000 * v.th + 100 * v.h + 10 * v.t + v.o;
+        var p = [10, 100, 1000][v.rp - 1];
+        var lower = Math.floor(n / p) * p, upper = lower + p, rounded = (n - lower >= p / 2) ? upper : lower;
+        var x0 = 40, x1 = 288, XN = x0 + (n - lower) / p * (x1 - x0);
+        var g = '<line x1="' + x0 + '" y1="34" x2="' + x1 + '" y2="34" stroke="' + SOFT + '" stroke-width="1.5"/>';
+        g += '<line x1="' + ((x0 + x1) / 2) + '" y1="29" x2="' + ((x0 + x1) / 2) + '" y2="39" stroke="' + SOFT + '" stroke-dasharray="2 2"/>';
+        [[x0, lower], [x1, upper]].forEach(function (a) {
+          var isR = a[1] === rounded;
+          g += '<line x1="' + a[0] + '" y1="27" x2="' + a[0] + '" y2="41" stroke="' + (isR ? BRAND : SOFT) + '" stroke-width="' + (isR ? 2.5 : 1) + '"/>';
+          g += txt(a[0], 55, a[1].toLocaleString('en-NZ'), 'middle', 11, isR ? BRAND : SOFT, isR);
+        });
+        g += '<circle cx="' + XN.toFixed(1) + '" cy="34" r="5" fill="' + MARI + '" stroke="' + INK + '"/>' + txt(XN.toFixed(1), 19, n.toLocaleString('en-NZ'), 'middle', 11, INK, true);
         return '<div class="ex-num">' + n.toLocaleString('en-NZ') + '</div>' +
           cap(v.th + '&times;1000 + ' + v.h + '&times;100 + ' + v.t + '&times;10 + ' + v.o + ' = ' + n) +
-          note('Move one slider by 1 and watch how much the number jumps — the position does the work.');
+          svg(320, 64, g, 'number line showing ' + n + ' between ' + lower + ' and ' + upper) +
+          cap('Rounded to the nearest ' + p + ': <b>' + rounded.toLocaleString('en-NZ') + '</b>') +
+          note('Look only at the digit just right of the place you&rsquo;re keeping — 5 or more rounds up. Watch a value like 9,996 carry all the way when it rounds.');
       }
     },
 
@@ -216,18 +230,25 @@
     },
 
     inequalities: {
-      kind: 'slider', intro: 'An inequality has a whole REGION of solutions. Test values of x against x + 2 &lt; 9.',
-      sliders: [{ id: 'x', label: 'Test x =', min: -5, max: 10, step: 1, val: 3 }],
+      kind: 'slider', intro: 'Change the sign and the test value: watch the solution region and the boundary circle respond.',
+      sliders: [
+        { id: 'sym', label: 'Sign', min: 0, max: 3, step: 1, val: 0, fmt: function (i) { return ['&lt;', '&le;', '&gt;', '&ge;'][i]; } },
+        { id: 'x', label: 'Test x =', min: -5, max: 10, step: 1, val: 3 }
+      ],
       render: function (v) {
-        var ok = v.x + 2 < 9, X = function (n) { return 160 + n * 9; };
-        var g = '<rect x="' + X(-6) + '" y="24" width="' + (X(7) - X(-6)) + '" height="12" fill="' + GOOD_BG + '"/>' +
+        var syms = ['&lt;', '&le;', '&gt;', '&ge;'], sym = syms[v.sym], B = 7;
+        var lt = (v.sym === 0 || v.sym === 1), incl = (v.sym === 1 || v.sym === 3);
+        var ok = v.sym === 0 ? v.x < B : v.sym === 1 ? v.x <= B : v.sym === 2 ? v.x > B : v.x >= B;
+        var X = function (n) { return 160 + n * 9; };
+        var rx0 = lt ? X(-6) : X(B), rx1 = lt ? X(B) : X(11);
+        var g = '<rect x="' + rx0 + '" y="24" width="' + (rx1 - rx0) + '" height="12" fill="' + GOOD_BG + '"/>' +
           '<line x1="' + X(-6) + '" y1="30" x2="' + X(11) + '" y2="30" stroke="' + SOFT + '" stroke-width="1.5"/>';
         for (var i = -5; i <= 10; i += 5) g += '<line x1="' + X(i) + '" y1="25" x2="' + X(i) + '" y2="35" stroke="' + SOFT + '"/>' + txt(X(i), 50, i, 'middle', 10, SOFT);
-        g += '<circle cx="' + X(7) + '" cy="30" r="5" fill="#fff" stroke="' + BRAND + '" stroke-width="2"/>';
+        g += '<circle cx="' + X(B) + '" cy="30" r="5.5" fill="' + (incl ? BRAND : '#fff') + '" stroke="' + BRAND + '" stroke-width="2"/>';
         g += '<circle cx="' + X(v.x) + '" cy="30" r="5" fill="' + (ok ? GOOD : BAD) + '"/>';
-        return svg(320, 56, g, 'number line with the region x less than 7 shaded') +
-          cap('x + 2 = ' + (v.x + 2) + (ok ? ' &lt; 9 &nbsp;&#10003; a solution' : ' — not &lt; 9 &nbsp;&#10007; outside the region')) +
-          note('Solving gives x &lt; 7: every value left of the open circle works — infinitely many solutions.');
+        return svg(320, 56, g, 'number line with the region for x ' + sym + ' 7 shaded') +
+          cap('Solve x + 2 ' + sym + ' 9 &rarr; x ' + sym + ' 7. Testing x = ' + v.x + ': ' + (v.x + 2) + ' ' + sym + ' 9 is ' + (ok ? '<b>true &#10003;</b>' : 'false &#10007;')) +
+          note((incl ? 'A filled circle' : 'An open circle') + ' at 7 means the boundary is ' + (incl ? 'included — x can equal 7.' : 'excluded — x cannot equal 7.'));
       }
     },
 
@@ -280,17 +301,28 @@
     },
 
     transformations: {
-      kind: 'slider', intro: 'Enlarge a square and watch lengths and area scale DIFFERENTLY.',
-      sliders: [{ id: 'k', label: 'Scale factor k', min: 1, max: 4, step: 1, val: 2 }],
+      kind: 'slider', intro: 'Move a point, pick a transformation, and watch its image — rigid motions never change size or shape.',
+      sliders: [
+        { id: 'x', label: 'Point x', min: -5, max: 5, step: 1, val: 3 },
+        { id: 'y', label: 'Point y', min: -5, max: 5, step: 1, val: 2 },
+        { id: 'tf', label: 'Transformation', min: 0, max: 4, step: 1, val: 0, fmt: function (i) { return ['reflect x-axis', 'reflect y-axis', 'rotate 180&deg;', 'rotate 90&deg; cw', 'rotate 90&deg; ccw'][i]; } }
+      ],
       render: function (v) {
-        var s0 = 26, s1 = 26 * v.k, H = Math.max(s1, s0) + 34;
-        var g = '<rect x="10" y="' + (H - 12 - s0) + '" width="' + s0 + '" height="' + s0 + '" fill="' + TINT + '" stroke="' + BRAND + '"/>' +
-          txt(10 + s0 / 2, H - 12 - s0 - 6, 'original', 'middle', 10, SOFT) +
-          '<rect x="70" y="' + (H - 12 - s1) + '" width="' + s1 + '" height="' + s1 + '" fill="' + MARI_BG + '" stroke="' + MARI + '"/>' +
-          txt(70 + s1 / 2, H - 12 - s1 - 6, '&times;' + v.k, 'middle', 10, SOFT);
-        return svg(190, H, g, 'a square and its enlargement by scale factor ' + v.k) +
-          cap('lengths &times;' + v.k + ' &nbsp;&rarr;&nbsp; area &times;' + v.k + '&sup2; = &times;' + (v.k * v.k)) +
-          note(v.k === 1 ? 'Scale factor 1 changes nothing — the identity enlargement.' : 'Count squares: the image holds ' + (v.k * v.k) + ' copies of the original, not ' + v.k + '.');
+        var names = ['reflect in the x-axis', 'reflect in the y-axis', 'rotate 180&deg;', 'rotate 90&deg; clockwise', 'rotate 90&deg; anticlockwise'];
+        var rules = ['(x, y) &rarr; (x, &minus;y)', '(x, y) &rarr; (&minus;x, y)', '(x, y) &rarr; (&minus;x, &minus;y)', '(x, y) &rarr; (y, &minus;x)', '(x, y) &rarr; (&minus;y, x)'];
+        var nx, ny;
+        switch (v.tf) { case 0: nx = v.x; ny = -v.y; break; case 1: nx = -v.x; ny = v.y; break; case 2: nx = -v.x; ny = -v.y; break; case 3: nx = v.y; ny = -v.x; break; default: nx = -v.y; ny = v.x; }
+        var S = 210, p = 14, u = (S - 2 * p) / 12, cx = S / 2, cy = S / 2;
+        var X = function (a) { return cx + a * u; }, Y = function (a) { return cy - a * u; };
+        var g = '';
+        for (var i = -5; i <= 5; i++) g += '<line x1="' + X(i) + '" y1="' + p + '" x2="' + X(i) + '" y2="' + (S - p) + '" stroke="#E4E8F2"/><line x1="' + p + '" y1="' + Y(i) + '" x2="' + (S - p) + '" y2="' + Y(i) + '" stroke="#E4E8F2"/>';
+        g += '<line x1="' + p + '" y1="' + cy + '" x2="' + (S - p) + '" y2="' + cy + '" stroke="' + SOFT + '" stroke-width="1.5"/><line x1="' + cx + '" y1="' + p + '" x2="' + cx + '" y2="' + (S - p) + '" stroke="' + SOFT + '" stroke-width="1.5"/>';
+        g += '<line x1="' + X(v.x) + '" y1="' + Y(v.y) + '" x2="' + X(nx) + '" y2="' + Y(ny) + '" stroke="' + TINT + '" stroke-dasharray="3 3"/>';
+        g += '<circle cx="' + X(v.x) + '" cy="' + Y(v.y) + '" r="5" fill="' + MARI + '" stroke="' + INK + '"/>' + txt(X(v.x) + 9, Y(v.y) - 6, 'P', 'start', 11, INK, true);
+        g += '<circle cx="' + X(nx) + '" cy="' + Y(ny) + '" r="5" fill="#fff" stroke="' + BRAND + '" stroke-width="2"/>' + txt(X(nx) + 9, Y(ny) - 6, "P'", 'start', 11, BRAND, true);
+        return svg(S, S, g, names[v.tf] + ' of a point') +
+          cap(names[v.tf] + ': ' + rules[v.tf] + ' &nbsp;&rarr;&nbsp; P(' + v.x + ', ' + v.y + ') &rarr; P&rsquo;(' + nx + ', ' + ny + ')') +
+          note('P&rsquo; stays the same distance from the origin as P — a rigid motion moves a shape without resizing it.');
       }
     },
 
@@ -429,12 +461,12 @@
       input.type = 'range'; input.min = s.min; input.max = s.max; input.step = s.step; input.value = s.val;
       input.setAttribute('aria-label', s.label);
       ctl.appendChild(input);
-      inputs[s.id] = { input: input, val: ctl.querySelector('.ex-val') };
+      inputs[s.id] = { input: input, val: ctl.querySelector('.ex-val'), fmt: s.fmt };
       controls.appendChild(ctl);
     });
     function update() {
       var v = {};
-      Object.keys(inputs).forEach(function (k) { v[k] = Number(inputs[k].input.value); inputs[k].val.textContent = inputs[k].input.value; });
+      Object.keys(inputs).forEach(function (k) { var raw = Number(inputs[k].input.value); v[k] = raw; inputs[k].val.textContent = inputs[k].fmt ? inputs[k].fmt(raw) : inputs[k].input.value; });
       canvas.innerHTML = spec.render(v);
     }
     Object.keys(inputs).forEach(function (k) { inputs[k].input.addEventListener('input', update); });
