@@ -51,7 +51,7 @@
   <li>Every number has an <span class="term">opposite</span> the same distance from zero; its <span class="term">absolute value</span> is that distance, ignoring the sign.</li>
   <li>Adding is movement along the number line: add a positive number by moving right, add a negative number by moving <span class="hl">left</span>.</li>
   <li><span class="term">Subtracting</span> a number means adding its opposite &mdash; that is why subtracting a negative makes a number bigger.</li>
-  <li>When multiplying: same signs give a <span class="hl">positive</span> answer, different signs give a <span class="hl">negative</span> answer.</li>
+  <li>When multiplying: same signs give a <span class="hl">positive</span> answer, different signs give a <span class="hl">negative</span> answer. Why does negative &times; negative turn positive? Follow the pattern down: 3&times;(&minus;2) = &minus;6, 2&times;(&minus;2) = &minus;4, 1&times;(&minus;2) = &minus;2, 0&times;(&minus;2) = 0 &mdash; each step rises by 2, so (&minus;1)&times;(&minus;2) must be <span class="hl">+2</span>. Reversing a reversal returns the original direction.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Sign rules (with reason)</span><span class="formula">subtracting = adding the opposite<br>same signs give a <b>positive</b><br>different signs give a <b>negative</b></span></div>
 <div class="rw-examples">
@@ -497,7 +497,7 @@
             <div class="checktip"><b>Check it:</b> Check the sign separately from the size; a quick number-line sketch confirms you moved the right way.</div>
           </div>
         </div><div class="ex" data-key="integers|hard|4" data-tid="integers">
-          <div class="ex-top"><span class="num">5</span><div class="q">Work out <span class="m">(−3)²</span>.</div></div>
+          <div class="ex-top"><span class="num">5</span><div class="q">Work out <span class="m">(−3)²</span> and <span class="m">−3²</span>. (The brackets change everything.)</div></div>
           
           <div class="attempt">
             <input class="ans-input" type="text" placeholder="Write your answer here&hellip;" aria-label="Your answer">
@@ -509,8 +509,8 @@
             <div class="lead">Approach</div>
             <p class="approach">Picture a number line — adding moves right, subtracting moves left, and subtracting a negative becomes adding. For × and ÷, fix the sign from the rule (same signs positive, different negative), then handle the digits.</p>
             <div class="lead">Working, step by step</div>
-            <ol class="steps"><li>Same signs → positive; different signs → negative.</li><li>= <span class="m">9</span>.</li></ol>
-            <div class="answer"><span class="tag">Answer</span><span class="val"><span class="m">9</span></span></div>
+            <ol class="steps"><li><span class="m">(−3)²</span> means <span class="m">(−3) × (−3) = 9</span> &mdash; the brackets square the whole negative number.</li><li><span class="m">−3²</span> means <span class="m">−(3²) = −(9) = −9</span> &mdash; with no brackets the power applies to the 3 only, then the minus sign is applied.</li><li>So <span class="m">(−3)² = 9</span> but <span class="m">−3² = −9</span>.</li></ol>
+            <div class="answer"><span class="tag">Answer</span><span class="val">9 and −9</span></div>
             <div class="checktip"><b>Check it:</b> Check the sign separately from the size; a quick number-line sketch confirms you moved the right way.</div>
           </div>
         </div><div class="ex" data-key="integers|hard|5" data-tid="integers">
@@ -618,6 +618,6 @@
 <script src="../js/nav.js"></script>
 <script src="../js/topic-interactions.js"></script>
 <script src="../js/explore.js"></script>
-<script>window.TOPIC_CHECK=Object.assign(window.TOPIC_CHECK||{}, {"integers|easy|0":["2"],"integers|easy|1":["2"],"integers|easy|2":["−3"],"integers|easy|3":["3"],"integers|easy|4":["−4"],"integers|easy|5":["−4"],"integers|easy|6":["0"],"integers|easy|7":["−3"],"integers|easy|8":["−5"],"integers|easy|9":["4"],"integers|medium|0":["−10"],"integers|medium|1":["−8"],"integers|medium|2":["−3"],"integers|medium|3":["3"],"integers|medium|4":["10"],"integers|medium|5":["−6"],"integers|medium|6":["−5"],"integers|medium|7":["−5"],"integers|medium|8":["−9"],"integers|medium|9":["−11"],"integers|hard|0":["−15"],"integers|hard|1":["12"],"integers|hard|2":["−3"],"integers|hard|3":["4"],"integers|hard|4":["9"],"integers|hard|5":["−3"],"integers|hard|6":["−1"],"integers|hard|7":["−5°C"],"integers|hard|8":["−10 m"],"integers|hard|9":["2"]});</script>
+<script>window.TOPIC_CHECK=Object.assign(window.TOPIC_CHECK||{}, {"integers|easy|0":["2"],"integers|easy|1":["2"],"integers|easy|2":["−3"],"integers|easy|3":["3"],"integers|easy|4":["−4"],"integers|easy|5":["−4"],"integers|easy|6":["0"],"integers|easy|7":["−3"],"integers|easy|8":["−5"],"integers|easy|9":["4"],"integers|medium|0":["−10"],"integers|medium|1":["−8"],"integers|medium|2":["−3"],"integers|medium|3":["3"],"integers|medium|4":["10"],"integers|medium|5":["−6"],"integers|medium|6":["−5"],"integers|medium|7":["−5"],"integers|medium|8":["−9"],"integers|medium|9":["−11"],"integers|hard|0":["−15"],"integers|hard|1":["12"],"integers|hard|2":["−3"],"integers|hard|3":["4"],"integers|hard|4":["9 and −9"],"integers|hard|5":["−3"],"integers|hard|6":["−1"],"integers|hard|7":["−5°C"],"integers|hard|8":["−10 m"],"integers|hard|9":["2"]});</script>
 </body>
 </html>

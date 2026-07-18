@@ -51,10 +51,11 @@
   <li>The <span class="term">sample space</span> is the full list of equally likely outcomes for an experiment &mdash; get this list right before calculating anything.</li>
   <li>For equally likely outcomes: <span class="term">P(event) = favourable outcomes &divide; total outcomes</span>.</li>
   <li>The complement rule: P(not A) = 1 &minus; P(A) &mdash; this often turns a hard "at least one" question into an easy one.</li>
+  <li>For two events together, "<span class="hl">AND</span>" multiplies and "<span class="hl">OR</span>" adds &mdash; but mind the conditions: multiply only when the events are <span class="term">independent</span> (one doesn't affect the other), add only when they cannot both happen at once. Two separate coins both landing heads: &frac12; &times; &frac12; = &frac14;, matching HH being 1 of the 4 equally likely outcomes.</li>
   <li>A probability is not tested by one trial. "30% chance of rain" not raining doesn't make the forecast wrong &mdash; probabilities are checked over <em>many</em> repeats, comparing the predicted probability to the <span class="term">relative frequency</span> (how often it actually happened).</li>
   <li>Each toss, roll or spin is independent of the last. If a coin has landed tails five times running, heads is still exactly 50% likely next time &mdash; it is never "due".</li>
 </ul>
-<div class="kbox"><span class="kbox-tag">Core formulas</span><span class="formula">P(event) = favourable &divide; total<br>P(not A) = 1 &minus; P(A)</span></div>
+<div class="kbox"><span class="kbox-tag">Core formulas</span><span class="formula">P(event) = favourable &divide; total<br>P(not A) = 1 &minus; P(A)<br>independent AND: &times; &nbsp;|&nbsp; exclusive OR: +</span></div>
 <div class="rw-examples">
   <div class="rw-card">
     <span class="rw-tag">&#127922; Rolling two dice</span>
@@ -96,7 +97,7 @@
         </article><article class="we-card hard">
           <div class="we-card-head"><span class="level">Hard</span><span>Challenge scenario</span></div>
           <div class="we-q">Two coins are tossed. Find P(exactly one head) and P(at least one head).</div>
-          <ol class="steps"><li>Sample space: HH, HT, TH, TT.</li><li>One head: 2/4 = 1/2; at least one: 3/4.</li></ol>
+          <ol class="steps"><li>Sample space (4 equally likely): HH, HT, TH, TT.</li><li>Exactly one head — HT and TH — is 2/4 = <span class="m">1/2</span>.</li><li>At least one head, counted directly (HH, HT, TH) is 3/4. Or by the complement: 1 − P(no heads) = 1 − P(TT) = 1 − 1/4 = <span class="m">3/4</span> — the same answer, the easy way.</li></ol>
           <div class="answer"><span class="tag">Answer</span><span class="val"><span class="m">1/2 and 3/4</span></span></div>
         </article></div></section>
   <section class="hf-sec practice" data-section="practice"><div class="hf-tag">&#9997;&#65039; Guided and independent practice</div><p class="hf-sub">Work up through Easy &rarr; Medium &rarr; Hard. Type an answer and press Mark; the full solution unlocks after each attempt.</p><div class="tabs"><button class="tab on" data-lv="Easy">Easy<span class="n">10</span></button><button class="tab " data-lv="Medium">Medium<span class="n">10</span></button><button class="tab " data-lv="Hard">Hard<span class="n">10</span></button></div><div class="pane on" data-lv="Easy"><div class="ex" data-key="probability|easy|0" data-tid="probability">
@@ -452,7 +453,7 @@
             <div class="lead">Approach</div>
             <p class="approach">Count the favourable outcomes and the total number of equally likely outcomes, then write the probability as a fraction and simplify. For combined events, list the whole sample space.</p>
             <div class="lead">Working, step by step</div>
-            <ol class="steps"><li>Sample space: HH, HT, TH, TT.</li><li>One head: 2/4 = 1/2; at least one: 3/4.</li></ol>
+            <ol class="steps"><li>Sample space (4 equally likely): HH, HT, TH, TT.</li><li>Exactly one head — HT and TH — is 2/4 = <span class="m">1/2</span>.</li><li>At least one head, counted directly (HH, HT, TH) is 3/4. Or by the complement: 1 − P(no heads) = 1 − P(TT) = 1 − 1/4 = <span class="m">3/4</span> — the same answer, the easy way.</li></ol>
             <div class="answer"><span class="tag">Answer</span><span class="val"><span class="m">1/2 and 3/4</span></span></div>
             <div class="checktip"><b>Check it:</b> Every probability must be between 0 and 1, and the chances of all outcomes should add up to 1.</div>
           </div>
@@ -629,6 +630,6 @@
 <script src="../js/nav.js"></script>
 <script src="../js/topic-interactions.js"></script>
 <script src="../js/explore.js"></script>
-<script>window.TOPIC_CHECK=Object.assign(window.TOPIC_CHECK||{}, {"probability|easy|0":["1/6 and 1/2"],"probability|easy|1":["1/3"],"probability|easy|2":["1/2"],"probability|easy|3":["0"],"probability|easy|4":["1"],"probability|easy|5":["1/2"],"probability|easy|6":["1/4"],"probability|easy|7":["1/3"],"probability|easy|8":["1/5"],"probability|easy|9":["1/3"],"probability|medium|0":["310"],"probability|medium|1":["110"],"probability|medium|2":["12"],"probability|medium|3":["35"],"probability|medium|4":["110"],"probability|medium|5":["310"],"probability|medium|6":["15"],"probability|medium|7":["35"],"probability|medium|8":["25"],"probability|medium|9":["110"],"probability|hard|0":["1/2 and 3/4"],"probability|hard|1":["1/2"],"probability|hard|2":["1/6"],"probability|hard|3":["8"],"probability|hard|4":["0.7"],"probability|hard|5":["1/5"],"probability|hard|6":["1/6"],"probability|hard|7":["40%"],"probability|hard|8":["1/4"],"probability|hard|9":["8"]});</script>
+<script>window.TOPIC_CHECK=Object.assign(window.TOPIC_CHECK||{}, {"probability|easy|0":["1/6 and 1/2"],"probability|easy|1":["1/3"],"probability|easy|2":["1/2"],"probability|easy|3":["0"],"probability|easy|4":["1"],"probability|easy|5":["1/2"],"probability|easy|6":["1/4"],"probability|easy|7":["1/3"],"probability|easy|8":["1/5"],"probability|easy|9":["1/3"],"probability|medium|0":["3/10"],"probability|medium|1":["1/10"],"probability|medium|2":["1/2"],"probability|medium|3":["3/5"],"probability|medium|4":["1/10"],"probability|medium|5":["3/10"],"probability|medium|6":["1/5"],"probability|medium|7":["3/5"],"probability|medium|8":["2/5"],"probability|medium|9":["1/10"],"probability|hard|0":["1/2 and 3/4"],"probability|hard|1":["1/2"],"probability|hard|2":["1/6"],"probability|hard|3":["8"],"probability|hard|4":["0.7"],"probability|hard|5":["1/5"],"probability|hard|6":["1/6"],"probability|hard|7":["40%"],"probability|hard|8":["1/4"],"probability|hard|9":["8"]});</script>
 </body>
 </html>

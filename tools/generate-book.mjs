@@ -94,17 +94,34 @@ function circleFig(label, kind) {
   else g += `<line class="fig-line" x1="${c}" y1="${c}" x2="${c + R}" y2="${c}"/><text class="fig-txt" text-anchor="middle" x="${c + R / 2}" y="${c - 7}">${label}</text>`;
   return `<svg class="viz" viewBox="0 0 ${S} ${S}" width="165" role="img" aria-label="circle">${g}</svg>`;
 }
+// Squares-built-on-each-side proof of a2 + b2 = c2, on a 3-4-5 triangle: the two smaller square
+// areas (9 and 16) visibly add to the largest (25). Gives the theorem a *why*, not just a statement.
+function pythagorasProof() {
+  const ox = 72, oy = 150, u = 18;
+  const X = (m) => +(ox + m * u).toFixed(1), Y = (m) => +(oy - m * u).toFixed(1);
+  const poly = (pts, fill) => `<polygon points="${pts.map(p => X(p[0]) + ',' + Y(p[1])).join(' ')}" fill="${fill}" stroke="var(--ink-soft)" stroke-width="1"/>`;
+  let g = '';
+  g += poly([[0, 0], [4, 0], [4, -4], [0, -4]], 'rgba(59,76,168,.14)');   // a2 = 16 (below)
+  g += poly([[0, 0], [0, 3], [-3, 3], [-3, 0]], 'rgba(59,76,168,.14)');   // b2 = 9 (left)
+  g += poly([[0, 3], [4, 0], [7, 4], [3, 7]], 'rgba(255,194,75,.24)');    // c2 = 25 (hypotenuse)
+  g += `<polygon points="${X(0)},${Y(0)} ${X(4)},${Y(0)} ${X(0)},${Y(3)}" fill="var(--paper)" stroke="var(--brand)" stroke-width="1.5"/>`;
+  g += `<path class="fig-ra" d="M${X(0.7)},${Y(0)} L${X(0.7)},${Y(0.7)} L${X(0)},${Y(0.7)}"/>`;
+  g += `<text class="fig-txt" text-anchor="middle" x="${X(2)}" y="${Y(-2) + 4}">a&sup2; = 16</text>`;
+  g += `<text class="fig-txt" text-anchor="middle" x="${X(-1.5)}" y="${Y(1.5) + 4}">b&sup2; = 9</text>`;
+  g += `<text class="fig-txt" text-anchor="middle" x="${X(3.4)}" y="${Y(3.6) + 4}">c&sup2; = 25</text>`;
+  return `<svg class="viz" viewBox="0 0 218 240" width="218" role="img" aria-label="Squares built on the three sides of a 3-4-5 right triangle, with areas 9, 16 and 25, showing 9 plus 16 equals 25">${g}</svg>`;
+}
 const INTRO_FIG = {
   graphs: quadrantChart, angles: () => straightAngle(125), shapes: polyRow,
   transformations: () => coordPlane(6, [{ x: -3, y: 1, label: 'A' }, { x: 1, y: 1, label: "A'", hollow: true }], { arrows: [{ x1: -3, y1: 1, x2: 1, y2: 1 }] }),
-  pythagoras: () => rightTri('a', 'b', 'c'), circles: () => circleFig('r', 'r')
+  pythagoras: pythagorasProof, circles: () => circleFig('r', 'r')
 };
 const INTRO_CAP = {
   graphs: 'The axes split the plane into four quadrants. A point&rsquo;s signs (x, y) decide which one it lands in.',
   angles: 'Angles on a straight line always add to 180&deg;; angles around a point add to 360&deg;.',
   shapes: 'Polygons are named by their number of sides. Interior angles sum to (n &minus; 2) &times; 180&deg;.',
   transformations: 'A translation slides every point by the same amount &mdash; here (x, y) each shift right by 4.',
-  pythagoras: 'In a right-angled triangle, a&sup2; + b&sup2; = c&sup2;, where c is the hypotenuse (opposite the right angle).',
+  pythagoras: 'Build a square on each side of this 3-4-5 triangle. The two smaller areas add up exactly to the largest: 9 + 16 = 25. That <em>is</em> a&sup2; + b&sup2; = c&sup2; &mdash; seen as areas, not just stated as a rule.',
   circles: 'r = radius, d = 2r. Circumference = 2&pi;r, Area = &pi;r&sup2;.'
 };
 const DYNAMIC_IDS = new Set(['graphs', 'angles', 'shapes', 'transformations', 'pythagoras', 'circles']);
@@ -116,7 +133,25 @@ const DYNAMIC_IDS = new Set(['graphs', 'angles', 'shapes', 'transformations', 'p
 // comma/whitespace-insensitive) grade these too. ~97% of the 720 answers are a single clean value;
 // a handful of multi-part answers (e.g. "$18 and $27") may occasionally mismatch on odd phrasing —
 // the same trade-off the dynamic topics already accept.
-function stripTags(html) { return String(html).replace(/<[^>]+>/g, '').trim(); }
+// Fraction answers are authored as stacked spans (<span class="frac"><span class="n">2</span>
+// <span class="d">3</span></span>) with no literal "/", so a naive tag-strip collapses "2/3" to
+// "23" — which then never matches a learner typing "2/3". Rebuild "n/d" from those spans BEFORE
+// stripping the rest, so the derived accept value is the same text the learner types. (Mixed
+// numbers like 2·1/6 become "21/6"; normAns strips whitespace either way, so the slash is what
+// matters.) Affects the frac-span answers in Fractions and Probability; plain-text "1/6" answers
+// already carry their slash and are untouched.
+//
+// The final tag-strip only removes REAL tags — "<" (or "</") immediately followed by a letter —
+// not a bare "<" used as a maths operator. A naive /<[^>]+>/ ate the "less-than" in Inequalities
+// answers like `<span class="m">x < 7</span>`: it matched "< 7</span>" as one "tag", truncating
+// the accepted answer to just "x" (so a correct "x < 7" could never be marked right, while a bare
+// "x" was wrongly accepted). "x > 4" was unaffected because ">" alone never opens a tag match.
+function stripTags(html) {
+  return String(html)
+    .replace(/<span class="frac">\s*<span class="n">([^<]*)<\/span>\s*<span class="d">([^<]*)<\/span>\s*<\/span>/g, '$1/$2')
+    .replace(/<\/?[a-zA-Z][^>]*>/g, '')
+    .trim();
+}
 
 // --- 2b. Visual models for the static topics the review found had none. Hand-authored, simple,
 // reusing the same .fig-*/.viz classes the dynamic topics' generated figures already use, so they
@@ -148,7 +183,36 @@ const STATIC_MODELS = {
       <circle class="fig-shape" cx="135" cy="120" r="14"/><text class="fig-txt" x="135" y="125" text-anchor="middle">2</text>
       <circle class="fig-shape" cx="185" cy="120" r="14"/><text class="fig-txt" x="185" y="125" text-anchor="middle">3</text>
       <text class="fig-txt soft" x="110" y="158" text-anchor="middle">36 = 2 &times; 2 &times; 3 &times; 3</text>
-    </svg>`,
+    </svg>
+    <div class="cap" style="margin-top:16px">HCF &amp; LCM of 18 and 24 as shared prime factors</div>
+    <svg class="viz" viewBox="0 0 264 150" width="264" role="img" aria-label="Two overlapping circles of prime factors: 18 is 2,3,3 and 24 is 2,2,2,3; the shared 2 and 3 sit in the overlap">
+      <circle cx="98" cy="70" r="58" fill="var(--brand)" fill-opacity=".10" stroke="var(--brand)"/>
+      <circle cx="166" cy="70" r="58" fill="var(--marigold)" fill-opacity=".16" stroke="#C9791A"/>
+      <text class="fig-txt" text-anchor="middle" x="58" y="30">18</text>
+      <text class="fig-txt" text-anchor="middle" x="206" y="30">24</text>
+      <text class="fig-txt" text-anchor="middle" x="64" y="76" style="font-size:16px">3</text>
+      <text class="fig-txt" text-anchor="middle" x="132" y="62" style="font-size:16px">2</text>
+      <text class="fig-txt" text-anchor="middle" x="132" y="86" style="font-size:16px">3</text>
+      <text class="fig-txt" text-anchor="middle" x="200" y="60" style="font-size:16px">2</text>
+      <text class="fig-txt" text-anchor="middle" x="200" y="84" style="font-size:16px">2</text>
+      <text class="fig-txt soft" text-anchor="middle" x="132" y="116" style="font-size:10px">shared</text>
+    </svg>
+    <div class="pvexp">HCF = the overlap = 2 &times; 3 = <b>6</b>. LCM = everything = 2 &times; 2 &times; 2 &times; 3 &times; 3 = <b>72</b>.</div>`,
+
+  decimals: `<div class="cap">Which is bigger &mdash; 0.7 or 0.65?</div>
+    <svg class="viz" viewBox="0 0 262 118" width="262" role="img" aria-label="Two bars from 0 to 1: the top filled to 0.7, the bottom to 0.65, showing 0.7 reaches further">
+      ${[['0.7', 0.7, 18, 'var(--brand)'], ['0.65', 0.65, 66, 'var(--marigold)']].map(([lab, v, y, col]) => {
+    const x0 = 44, w = 196;
+    let s = `<text class="fig-txt" text-anchor="end" x="38" y="${y + 17}">${lab}</text>`;
+    s += `<rect x="${x0}" y="${y}" width="${w}" height="24" rx="3" fill="none" stroke="var(--grid)"/>`;
+    s += `<rect x="${x0}" y="${y}" width="${(w * v).toFixed(1)}" height="24" rx="3" fill="${col}" fill-opacity=".55"/>`;
+    for (let i = 1; i < 10; i++) s += `<line x1="${(x0 + w * i / 10).toFixed(1)}" y1="${y}" x2="${(x0 + w * i / 10).toFixed(1)}" y2="${y + 24}" stroke="var(--grid)" stroke-dasharray="2 2"/>`;
+    return s;
+  }).join('')}
+      <line x1="${(44 + 196 * 0.65).toFixed(1)}" y1="14" x2="${(44 + 196 * 0.65).toFixed(1)}" y2="96" stroke="var(--ink-soft)" stroke-dasharray="3 3"/>
+      <line x1="${(44 + 196 * 0.7).toFixed(1)}" y1="14" x2="${(44 + 196 * 0.7).toFixed(1)}" y2="96" stroke="var(--brand)" stroke-dasharray="3 3"/>
+    </svg>
+    <div class="pvexp">0.7 = 0.70, and 70 hundredths &gt; 65 hundredths &mdash; more digits doesn&rsquo;t mean a bigger number.</div>`,
 
   percentages: `<div class="cap">25% of a hundred square</div>
     <svg class="viz" viewBox="0 0 210 210" width="180" role="img" aria-label="A ten by ten grid with 25 of the 100 small squares shaded">
@@ -217,10 +281,10 @@ const STATIC_MODELS = {
       <text class="fig-txt soft" x="100" y="144" text-anchor="middle">= 12 unit cubes</text>
     </svg>`,
 
-  conversions: `<div class="cap">Metric ladder &mdash; each step is &times;10</div>
-    <svg class="viz" viewBox="0 0 260 70" width="260" role="img" aria-label="km to m to cm to mm, each connected by a times 10 arrow">
+  conversions: `<div class="cap">Metric ladder &mdash; each step is a power of ten</div>
+    <svg class="viz" viewBox="0 0 260 70" width="260" role="img" aria-label="km to m to cm to mm, connected by times 1000, times 100 and times 10 arrows">
       ${['km', 'm', 'cm', 'mm'].map((u, i) => `<rect class="fig-shape" x="${10 + i * 62}" y="15" width="46" height="30" rx="7"/><text class="fig-txt" x="${33 + i * 62}" y="35" text-anchor="middle">${u}</text>`).join('')}
-      ${[0, 1, 2].map(i => `<line class="fig-arr" x1="${58 + i * 62}" y1="30" x2="${68 + i * 62}" y2="30" marker-end="url(#cArrow)"/><text class="fig-txt soft" x="${63 + i * 62}" y="18" text-anchor="middle" style="font-size:10px">&times;10</text>`).join('')}
+      ${['&times;1000', '&times;100', '&times;10'].map((lab, i) => `<line class="fig-arr" x1="${58 + i * 62}" y1="30" x2="${68 + i * 62}" y2="30" marker-end="url(#cArrow)"/><text class="fig-txt soft" x="${63 + i * 62}" y="18" text-anchor="middle" style="font-size:9px">${lab}</text>`).join('')}
       <defs><marker id="cArrow" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--ink-soft)"/></marker></defs>
     </svg>`,
 
@@ -448,6 +512,145 @@ function applyContentFixes(CURRICULUM, CH) {
       steps: [`Mean: (20+6+14+8) &divide; 4 = 48 &divide; 4 = 12.`, `Median: sorted is 6, 8, 14, 20 &mdash; with 4 values, average the middle two: (8+14) &divide; 2 = 11.`],
       ans: `mean 12, median 11`
     };
+  }
+
+  // --- Round-3 review follow-up: worked-solution completeness (the "show the working" P0s) ---
+  // A recurring finding across the site was that Medium/Hard "Working, step by step" blocks
+  // restated the rule and jumped to the answer, showing no intermediate arithmetic — so a stuck
+  // learner clicking "Show solution" had nothing to learn from. The fixes below rebuild those
+  // steps as a full ordered trace (one operation per line). Every answer is unchanged.
+  const mspan = (s) => `<span class="m">${s}</span>`;
+  const fracHtml = (n, d) => `<span class="frac"><span class="n">${n}</span><span class="d">${d}</span></span>`;
+
+  // Operations & Order (BEDMAS): all 20 Medium/Hard solutions were two generic templated
+  // lines. medium[0]/hard[0] also feed the top-of-chapter worked examples, so those improve too.
+  const op = byId.operations;
+  const opSteps = {
+    medium: [
+      [`Brackets first: ${mspan('8 + 2 = 10')}.`, `Exponent: ${mspan('3² = 9')}.`, `Multiply: ${mspan('10 × 9 = 90')}.`, `Subtract: ${mspan('90 − 5 = 85')}.`],
+      [`Exponent first: ${mspan('2² = 4')}.`, `Multiply: ${mspan('6 × 3 = 18')}.`, `Add: ${mspan('4 + 18 = 22')}.`],
+      [`Brackets first: ${mspan('15 − 7 = 8')}.`, `Multiply: ${mspan('8 × 4 = 32')}.`, `Add: ${mspan('32 + 1 = 33')}.`],
+      [`Brackets first: ${mspan('2 + 3 = 5')}.`, `Divide: ${mspan('50 ÷ 5 = 10')}.`, `Add: ${mspan('10 + 6 = 16')}.`],
+      [`Brackets first: ${mspan('9 − 5 = 4')}.`, `Exponent: ${mspan('4² = 16')}.`, `Multiply: ${mspan('4 × 16 = 64')}.`],
+      [`Exponents first: ${mspan('3² = 9')} and ${mspan('4² = 16')}.`, `Add: ${mspan('9 + 16 = 25')}.`, `Subtract: ${mspan('25 − 5 = 20')}.`],
+      [`Brackets first: ${mspan('6 + 4 = 10')}.`, `Exponent: ${mspan('10² = 100')}.`, `Divide: ${mspan('100 ÷ 20 = 5')}.`],
+      [`Exponent first: ${mspan('4² = 16')}.`, `Multiply: ${mspan('3 × 16 = 48')}.`, `Subtract: ${mspan('100 − 48 = 52')}.`],
+      [`Inside the brackets, ÷ before +: ${mspan('12 ÷ 4 = 3')}, then ${mspan('3 + 5 = 8')}.`, `Multiply: ${mspan('8 × 2 = 16')}.`],
+      [`Exponent first: ${mspan('2³ = 8')}.`, `Multiply: ${mspan('8 × 2 = 16')}.`, `Add: ${mspan('7 + 16 = 23')}.`],
+    ],
+    hard: [
+      [`Innermost brackets: ${mspan('3 + 1 = 4')}.`, `Outer brackets: ${mspan('2 × 4 = 8')}.`, `Divide: ${mspan('48 ÷ 8 = 6')}.`, `Exponent: ${mspan('5² = 25')}.`, `Add: ${mspan('6 + 25 = 31')}.`],
+      [`Exponents inside the brackets: ${mspan('4² = 16')}, ${mspan('2³ = 8')}.`, `Each bracket: ${mspan('16 − 8 = 8')} and ${mspan('6 + 3 = 9')}.`, `Multiply: ${mspan('8 × 9 = 72')}.`],
+      [`Brackets (exponent first): ${mspan('2² = 4')}, then ${mspan('4 + 1 = 5')}.`, `Divide and multiply, left to right: ${mspan('100 ÷ 5 = 20')}, ${mspan('3 × 4 = 12')}.`, `Subtract: ${mspan('20 − 12 = 8')}.`],
+      [`Innermost brackets: ${mspan('8 − 6 = 2')}.`, `Exponents: ${mspan('2² = 4')} and ${mspan('3² = 9')}.`, `Inside the outer bracket: ${mspan('9 + 4 = 13')}.`, `Multiply: ${mspan('2 × 13 = 26')}.`],
+      [`Brackets: ${mspan('7 + 5 = 12')}.`, `Exponent: ${mspan('6² = 36')}.`, `Multiply and divide, left to right: ${mspan('12 × 3 = 36')}, ${mspan('36 ÷ 2 = 18')}.`, `Subtract: ${mspan('36 − 18 = 18')}.`],
+      [`Exponent inside the brackets: ${mspan('2³ = 8')}, then ${mspan('30 − 8 = 22')}.`, `Divide: ${mspan('22 ÷ 11 = 2')}.`, `Exponent: ${mspan('5² = 25')}.`, `Add: ${mspan('2 + 25 = 27')}.`],
+      [`Innermost brackets: ${mspan('1 + 2 = 3')}.`, `Divide inside: ${mspan('18 ÷ 3 = 6')}.`, `Exponent: ${mspan('5² = 25')}.`, `Multiply: ${mspan('6 × 3 = 18')}.`, `Subtract: ${mspan('25 − 18 = 7')}.`],
+      [`Brackets: ${mspan('2 + 3 = 5')} and ${mspan('10 − 6 = 4')}.`, `Exponents: ${mspan('5² = 25')}, ${mspan('4² = 16')}.`, `Subtract: ${mspan('25 − 16 = 9')}.`],
+      [`Exponent first: ${mspan('6³ = 216')}.`, `Brackets: ${mspan('4 × 9 = 36')}.`, `Divide: ${mspan('216 ÷ 36 = 6')}.`, `Add: ${mspan('6 + 7 = 13')}.`],
+      [`Inside the brackets, ÷ then exponent: ${mspan('45 ÷ 5 = 9')}, ${mspan('3² = 9')}, then ${mspan('9 + 9 = 18')}.`, `Multiply: ${mspan('18 × 2 = 36')}.`],
+    ]
+  };
+  ['medium', 'hard'].forEach((k) => opSteps[k].forEach((st, i) => { if (op[k][i]) op[k][i].steps = st; }));
+
+  // Fractions: every add/subtract solution named the common denominator, then skipped the one
+  // genuinely new step — rewriting each fraction over it — before giving the answer. Show it.
+  const fMed = [
+    [`Common denominator of 4 and 3 is ${mspan('12')}.`, `Rewrite each over 12: ${fracHtml(3, 4)} = ${fracHtml(9, 12)} (×3) and ${fracHtml(2, 3)} = ${fracHtml(8, 12)} (×4).`, `Add the numerators: ${fracHtml(9, 12)} + ${fracHtml(8, 12)} = ${fracHtml(17, 12)} = 1${fracHtml(5, 12)}.`],
+    [`Common denominator of 6 and 4 is ${mspan('12')}.`, `Rewrite each over 12: ${fracHtml(5, 6)} = ${fracHtml(10, 12)} (×2) and ${fracHtml(1, 4)} = ${fracHtml(3, 12)} (×3).`, `Subtract: ${fracHtml(10, 12)} − ${fracHtml(3, 12)} = ${fracHtml(7, 12)}.`],
+    [`Common denominator of 3 and 6 is ${mspan('6')}.`, `Rewrite: ${fracHtml(2, 3)} = ${fracHtml(4, 6)} (×2); ${fracHtml(1, 6)} already has denominator 6.`, `Add: ${fracHtml(4, 6)} + ${fracHtml(1, 6)} = ${fracHtml(5, 6)}.`],
+    [`Common denominator of 8 and 2 is ${mspan('8')}.`, `Rewrite: ${fracHtml(1, 2)} = ${fracHtml(4, 8)} (×4); ${fracHtml(7, 8)} already has denominator 8.`, `Subtract: ${fracHtml(7, 8)} − ${fracHtml(4, 8)} = ${fracHtml(3, 8)}.`],
+    [`Common denominator of 2 and 5 is ${mspan('10')}.`, `Rewrite each over 10: ${fracHtml(1, 2)} = ${fracHtml(5, 10)} (×5) and ${fracHtml(2, 5)} = ${fracHtml(4, 10)} (×2).`, `Add: ${fracHtml(5, 10)} + ${fracHtml(4, 10)} = ${fracHtml(9, 10)}.`],
+    [`Common denominator of 5 and 10 is ${mspan('10')}.`, `Rewrite: ${fracHtml(3, 5)} = ${fracHtml(6, 10)} (×2); ${fracHtml(1, 10)} already has denominator 10.`, `Add: ${fracHtml(6, 10)} + ${fracHtml(1, 10)} = ${fracHtml(7, 10)}.`],
+    [`Common denominator of 8 and 4 is ${mspan('8')}.`, `Rewrite: ${fracHtml(1, 4)} = ${fracHtml(2, 8)} (×2); ${fracHtml(5, 8)} already has denominator 8.`, `Subtract: ${fracHtml(5, 8)} − ${fracHtml(2, 8)} = ${fracHtml(3, 8)}.`],
+    [`Common denominator of 3 and 4 is ${mspan('12')}.`, `Rewrite each over 12: ${fracHtml(2, 3)} = ${fracHtml(8, 12)} (×4) and ${fracHtml(3, 4)} = ${fracHtml(9, 12)} (×3).`, `Add: ${fracHtml(8, 12)} + ${fracHtml(9, 12)} = ${fracHtml(17, 12)} = 1${fracHtml(5, 12)}.`],
+    [`Common denominator of 10 and 5 is ${mspan('10')}.`, `Rewrite: ${fracHtml(2, 5)} = ${fracHtml(4, 10)} (×2); ${fracHtml(9, 10)} already has denominator 10.`, `Subtract: ${fracHtml(9, 10)} − ${fracHtml(4, 10)} = ${fracHtml(5, 10)} = ${fracHtml(1, 2)}.`],
+    [`Common denominator of 4 and 6 is ${mspan('12')}.`, `Rewrite each over 12: ${fracHtml(1, 4)} = ${fracHtml(3, 12)} (×3) and ${fracHtml(5, 6)} = ${fracHtml(10, 12)} (×2).`, `Add: ${fracHtml(3, 12)} + ${fracHtml(10, 12)} = ${fracHtml(13, 12)} = 1${fracHtml(1, 12)}.`],
+  ];
+  fMed.forEach((st, i) => { if (frac.medium[i]) frac.medium[i].steps = st; });
+
+  // Fraction-of-a-quantity (Hard 0–3) was used but never modelled: show the method — divide by
+  // the denominator, multiply by the numerator.
+  const ofQty = [
+    [`${fracHtml(2, 3)} of 30: divide by the denominator (${mspan('30 ÷ 3 = 10')}), then multiply by the numerator (${mspan('10 × 2 = 20')}).`, `Now ${fracHtml(3, 4)} of 20: ${mspan('20 ÷ 4 = 5')}, then ${mspan('5 × 3 = 15')}.`],
+    [`${fracHtml(3, 5)} of 40: ${mspan('40 ÷ 5 = 8')}, then ${mspan('8 × 3 = 24')}.`, `Now ${fracHtml(1, 2)} of 24: ${mspan('24 ÷ 2 = 12')}.`],
+    [`${fracHtml(3, 4)} of 24: ${mspan('24 ÷ 4 = 6')}, then ${mspan('6 × 3 = 18')}.`, `Now ${fracHtml(2, 3)} of 18: ${mspan('18 ÷ 3 = 6')}, then ${mspan('6 × 2 = 12')}.`],
+    [`${fracHtml(2, 5)} of 60: ${mspan('60 ÷ 5 = 12')}, then ${mspan('12 × 2 = 24')}.`, `Now ${fracHtml(3, 4)} of 24: ${mspan('24 ÷ 4 = 6')}, then ${mspan('6 × 3 = 18')}.`],
+  ];
+  ofQty.forEach((st, i) => { if (frac.hard[i]) frac.hard[i].steps = st; });
+
+  // Factors: the 5 HCF/LCM solutions asserted the answers with a one-line non-method, even though
+  // the key-box promises the prime-factorisation method ("primes in BOTH" / "highest power of
+  // EACH"). Model it — the shortcut that actually scales to bigger numbers.
+  const fac = byId.factors;
+  const factHcfLcm = [
+    [`Prime factorise each: ${mspan('18 = 2 × 3 × 3')} and ${mspan('24 = 2 × 2 × 2 × 3')}.`, `HCF = the primes in BOTH = ${mspan('2 × 3 = 6')}.`, `LCM = the highest power of every prime = ${mspan('2³ × 3² = 8 × 9 = 72')}.`, `Check: ${mspan('HCF × LCM = 6 × 72 = 432 = 18 × 24')}. ✓`],
+    [`Prime factorise: ${mspan('12 = 2 × 2 × 3')} and ${mspan('16 = 2 × 2 × 2 × 2')}.`, `HCF = primes in both = ${mspan('2 × 2 = 4')}.`, `LCM = highest power of each = ${mspan('2⁴ × 3 = 16 × 3 = 48')}.`],
+    [`Prime factorise: ${mspan('20 = 2 × 2 × 5')} and ${mspan('30 = 2 × 3 × 5')}.`, `HCF = primes in both = ${mspan('2 × 5 = 10')}.`, `LCM = highest power of each = ${mspan('2² × 3 × 5 = 60')}.`],
+    [`Prime factorise: ${mspan('15 = 3 × 5')} and ${mspan('25 = 5 × 5')}.`, `HCF = primes in both = ${mspan('5')}.`, `LCM = highest power of each = ${mspan('3 × 5² = 3 × 25 = 75')}.`],
+    [`Prime factorise: ${mspan('24 = 2 × 2 × 2 × 3')} and ${mspan('36 = 2 × 2 × 3 × 3')}.`, `HCF = primes in both = ${mspan('2 × 2 × 3 = 12')}.`, `LCM = highest power of each = ${mspan('2³ × 3² = 8 × 9 = 72')}.`],
+  ];
+  factHcfLcm.forEach((st, i) => { if (fac.medium[i]) fac.medium[i].steps = st; });
+
+  // Integers: the −3² vs (−3)² distinction was taught in the Watch-out box but never tested (Hard
+  // only had (−3)²). Turn that item into an explicit side-by-side contrast so the nuance is checked.
+  const intg = byId.integers;
+  if (intg.hard[4]) {
+    intg.hard[4] = {
+      q: `Work out ${mspan('(−3)²')} and ${mspan('−3²')}. (The brackets change everything.)`,
+      steps: [
+        `${mspan('(−3)²')} means ${mspan('(−3) × (−3) = 9')} &mdash; the brackets square the whole negative number.`,
+        `${mspan('−3²')} means ${mspan('−(3²) = −(9) = −9')} &mdash; with no brackets the power applies to the 3 only, then the minus sign is applied.`,
+        `So ${mspan('(−3)² = 9')} but ${mspan('−3² = −9')}.`
+      ],
+      ans: `9 and −9`
+    };
+  }
+
+  // Statistics: "pick a sensible average for the situation" was a stated goal but never assessed —
+  // all 30 items were pure computation. Convert two near-duplicate mean/median items into the
+  // judgement task the goal names (leaving the even-count median item at medium[9] intact).
+  const st2 = byId.statistics;
+  st2.medium[7] = {
+    q: `A shoe shop records the sizes it sells and wants to stock the <b>most popular</b> size. Which average should it use &mdash; mean, median or mode?`,
+    steps: [`The shop wants the value that comes up most often, not a calculated centre or a middle value.`, `The <b>mode</b> is the most frequent value &mdash; here, the size sold most.`],
+    ans: `mode`
+  };
+  st2.medium[8] = {
+    q: `Seven houses sell for similar prices, but one mansion sells for ten times as much. To describe a <b>typical</b> price, is the mean or the median fairer?`,
+    steps: [`The mansion is an outlier; it drags the mean upward so it no longer represents a typical house.`, `The <b>median</b> (the middle value) is barely affected by one extreme value, so it is the fairer choice here.`],
+    ans: `median`
+  };
+
+  // Statistics: a "Data & Averages" chapter with no chart to read. Add one frequency-table item so
+  // data literacy means more than a bare list of numbers (replaces a plain "find the mode" item).
+  if (st2.hard[8]) {
+    st2.hard[8] = {
+      q: `A shop records the shoe sizes it sells: <table class="pvtable"><thead><tr><th>Size</th><th>6</th><th>7</th><th>8</th><th>9</th></tr></thead><tbody><tr><td>Sold</td><td>3</td><td>8</td><td>5</td><td>2</td></tr></tbody></table>Read the table: what is the modal size (the mode)?`,
+      steps: [`The mode is the value with the highest frequency.`, `Size 7 was sold most often (8 times), so the modal size is <span class="m">7</span>.`],
+      ans: `7`
+    };
+  }
+
+  // Volume: the mistake-detective tested add-vs-multiply (covered well elsewhere) but never the
+  // cm³-vs-cm² units confusion the chapter itself flags as the key distinction. Swap it in.
+  if (CH.volume) {
+    CH.volume.mistake = {
+      wrong: `A cuboid&rsquo;s volume is written as <span class="bad">24 cm&sup2;</span>.`,
+      error: `They used square units (cm&sup2;, for area) where volume needs cubic units (cm&sup3;).`,
+      fix: `Volume fills space in three directions, so it is measured in <b>cubic</b> units: 24 cm&sup3;. Square units (cm&sup2;) are for surface area &mdash; the flat covering.`
+    };
+  }
+
+  // Probability: the Hard "at least one head" item recommends the complement method but only ever
+  // counted directly. Show both routes so the complement technique the chapter teaches is modelled.
+  const prb = byId.probability;
+  if (prb.hard[0]) {
+    prb.hard[0].steps = [
+      `Sample space (4 equally likely): HH, HT, TH, TT.`,
+      `Exactly one head — HT and TH — is 2/4 = <span class="m">1/2</span>.`,
+      `At least one head, counted directly (HH, HT, TH) is 3/4. Or by the complement: 1 − P(no heads) = 1 − P(TT) = 1 − 1/4 = <span class="m">3/4</span> — the same answer, the easy way.`
+    ];
   }
 }
 

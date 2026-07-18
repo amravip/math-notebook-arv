@@ -36,6 +36,10 @@
   // style thousands groupings are joined BEFORE splitting so they don't read as two parts.
   function normParts(s) {
     var x = String(s).toLowerCase().trim();
+    // Normalise the true minus sign (and en/em dashes) to a plain hyphen, exactly as normAns does —
+    // otherwise a multi-part answer containing a negative (e.g. "9 and −9") only matches when typed
+    // with the "and" separator, and parseFloat can't read "−9" for the numeric-tolerance compare.
+    x = x.replace(/[−–—]/g, '-');
     x = x.replace(/[°º²³()]/g, '').replace(/\$/g, '').replace(/π/g, 'pi');
     x = x.replace(/(\d)[ ,](?=\d\d\d(\D|$))/g, '$1');
     return x.split(/(?:and|[,;&\s])+/).filter(function (p) { return p && !/^[a-z%]+$/.test(p); });

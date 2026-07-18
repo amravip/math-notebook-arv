@@ -130,10 +130,11 @@ export const LESSON_EXPANSIONS = {
   <li>The <span class="term">sample space</span> is the full list of equally likely outcomes for an experiment &mdash; get this list right before calculating anything.</li>
   <li>For equally likely outcomes: <span class="term">P(event) = favourable outcomes &divide; total outcomes</span>.</li>
   <li>The complement rule: P(not A) = 1 &minus; P(A) &mdash; this often turns a hard "at least one" question into an easy one.</li>
+  <li>For two events together, "<span class="hl">AND</span>" multiplies and "<span class="hl">OR</span>" adds &mdash; but mind the conditions: multiply only when the events are <span class="term">independent</span> (one doesn't affect the other), add only when they cannot both happen at once. Two separate coins both landing heads: &frac12; &times; &frac12; = &frac14;, matching HH being 1 of the 4 equally likely outcomes.</li>
   <li>A probability is not tested by one trial. "30% chance of rain" not raining doesn't make the forecast wrong &mdash; probabilities are checked over <em>many</em> repeats, comparing the predicted probability to the <span class="term">relative frequency</span> (how often it actually happened).</li>
   <li>Each toss, roll or spin is independent of the last. If a coin has landed tails five times running, heads is still exactly 50% likely next time &mdash; it is never "due".</li>
 </ul>
-<div class="kbox"><span class="kbox-tag">Core formulas</span><span class="formula">P(event) = favourable &divide; total<br>P(not A) = 1 &minus; P(A)</span></div>
+<div class="kbox"><span class="kbox-tag">Core formulas</span><span class="formula">P(event) = favourable &divide; total<br>P(not A) = 1 &minus; P(A)<br>independent AND: &times; &nbsp;|&nbsp; exclusive OR: +</span></div>
 <div class="rw-examples">
   <div class="rw-card">
     <span class="rw-tag">&#127922; Rolling two dice</span>
@@ -231,11 +232,12 @@ export const LESSON_EXPANSIONS = {
 <p><span class="term">Perimeter</span> is a one-dimensional length around the edge of a shape; <span class="term">area</span> is a two-dimensional covering, counted in <span class="hl">unit squares</span>.</p>
 <ul class="def-list">
   <li>Key area formulas: rectangle = length &times; width; triangle = &frac12; &times; base &times; height (exactly half its surrounding rectangle); parallelogram = base &times; height.</li>
+  <li>A <span class="term">trapezium</span> has one pair of parallel sides (lengths a and b, a distance h apart). Its area is <span class="hl">&frac12;(a + b) &times; h</span> &mdash; average the two parallel sides, then multiply by the height. For a = 6, b = 10, h = 4: &frac12;(6 + 10) &times; 4 = &frac12; &times; 16 &times; 4 = 32.</li>
   <li>For a triangle, "height" always means the <span class="term">perpendicular height</span> &mdash; measured straight up from the base at a right angle &mdash; never the slanted side, even when the slanted side looks like the obvious measurement to use.</li>
   <li>A <span class="term">compound shape</span> (made of simpler shapes joined together) is found by splitting it into rectangles and triangles, then adding or subtracting their areas.</li>
   <li>Perimeter and area measure genuinely different things &mdash; a shape can have a bigger perimeter but a <em>smaller</em> area than another shape.</li>
 </ul>
-<div class="kbox"><span class="kbox-tag">Key areas</span><span class="formula">rectangle = l &times; w<br>triangle = &frac12; &times; b &times; h<br>parallelogram = b &times; h</span></div>
+<div class="kbox"><span class="kbox-tag">Key areas</span><span class="formula">rectangle = l &times; w<br>triangle = &frac12; &times; b &times; h<br>parallelogram = b &times; h<br>trapezium = &frac12;(a + b) &times; h</span></div>
 <div class="rw-examples">
   <div class="rw-card">
     <span class="rw-tag">&#128679; Fencing a garden</span>
@@ -258,6 +260,8 @@ export const LESSON_EXPANSIONS = {
   <li>Surface area is the material needed to wrap or cover a solid completely &mdash; the sum of every face's area. Unfold a box flat and you get its <span class="term">net</span>: every face laid out where you can see and add up all six at once.</li>
   <li>A cuboid's 6 faces come in <b>3 matching pairs</b> (top&amp;bottom, front&amp;back, left&amp;right) &mdash; find one area from each pair, add the three, then double the total.</li>
   <li>Scaling a 3-D shape affects volume differently to area: double every edge of a cube and its volume becomes <b>8 times</b> bigger (2&sup3;), not 2 times.</li>
+  <li>To find a side length back from a volume you <span class="term">undo the cube</span> (a cube root): try whole numbers until one fits. For volume 64 cm&sup3;: 3&times;3&times;3 = 27 (too small), 4&times;4&times;4 = 64 &mdash; so the side is <span class="hl">4 cm</span>.</li>
+  <li>Capacity links straight to volume: a cube 10 cm on every side holds 10&times;10&times;10 = 1000 cm&sup3;, and that amount is defined as <span class="hl">1 litre</span>.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Prism &amp; capacity</span><span class="formula">V = base area &times; height<br>1 litre = 1000 cm&sup3;</span></div>
 <div class="rw-examples">
@@ -288,7 +292,7 @@ export const LESSON_EXPANSIONS = {
   <li>Every step must be a "legal move": add, subtract, multiply or divide <span class="hl">both sides equally</span> so the balance stays true.</li>
   <li>To undo an operation, apply its opposite (its <span class="term">inverse</span>) &mdash; undo in the reverse order to how the expression was built.</li>
   <li>Always check your answer by substituting it back into the original equation &mdash; both sides should come out equal.</li>
-  <li>Every equation in this chapter has the unknown on just one side. Equations with the unknown on <em>both</em> sides (like x + 3 = 2x &minus; 1) use the same balance idea with one extra move, and come later.</li>
+  <li>If the unknown appears on <em>both</em> sides (like 3x + 5 = x + 13), do one extra move first: subtract the smaller x-term from both sides to gather all the x's on one side, then solve as usual. Subtract x from both sides &rarr; 2x + 5 = 13 &rarr; 2x = 8 &rarr; <span class="hl">x = 4</span>. The balance idea is unchanged &mdash; you are just lifting an x-shaped weight off each pan.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Legal moves</span><span class="formula">do the SAME thing to both sides<br>undo operations in reverse</span></div>
 <div class="rw-examples">
@@ -462,8 +466,8 @@ export const LESSON_EXPANSIONS = {
 <ul class="def-list">
   <li>Index law: when multiplying powers with the same base, <em>add</em> the exponents, never multiply them &mdash; a&#8319; &times; a&#7480; = a&#8319;&#8314;&#7480;. So 2&sup3; &times; 2&sup2; = 2&#8309; = 32, not 2&#8310; = 64.</li>
   <li>A <span class="hl">square root</span> undoes squaring &mdash; it asks "what number, multiplied by itself, gives this value?"</li>
-  <li>Any base to the power 0 equals 1 (a&#8304; = 1) &mdash; a direct result of the same product rule.</li>
-  <li><span class="hl teal">Scientific notation</span> writes very large or very small numbers compactly, as a value between 1 and 10 multiplied by a power of 10.</li>
+  <li>Any base to the power 0 equals 1 (a&#8304; = 1). See <em>why</em> by dividing down: 2&sup3; = 8, 2&sup2; = 4, 2&sup1; = 2 &mdash; each step halves, so 2&#8304; = 2 &divide; 2 = <span class="hl">1</span>.</li>
+  <li><span class="hl teal">Scientific notation</span> writes very large or very small numbers compactly, as a value between 1 and 10 times a power of 10. Large numbers use a positive power (150,000,000 = 1.5 &times; 10&#8312;); numbers <em>smaller than 1</em> use a negative power &mdash; 0.0045 = <span class="hl">4.5 &times; 10&#8315;&sup3;</span> (the point moves 3 places right to make 4.5, so the exponent is &minus;3). The leading digit is always 1&ndash;10, so every number has exactly one form.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Index laws</span><span class="formula">a&#8319; &times; a&#7480; = a&#8319;&#8314;&#7480;<br>(a&#8319;)&#7480; = a&#8319;&#7480;<br>a&#8304; = 1</span></div>
 <div class="rw-examples">
@@ -491,6 +495,7 @@ export const LESSON_EXPANSIONS = {
 </ul>
 <div class="kbox"><span class="kbox-tag">Two rules</span><span class="formula">term-to-term: add the common difference<br>position-to-term: nth term = d &times; n + adjust</span></div>
 <p>Going the other way &mdash; from a sequence <em>to</em> its rule &mdash; is the direction most questions actually ask. For 7, 11, 15, 19&hellip;: the difference is always +4, so the rule starts "4n". Testing n = 1 gives 4&times;1 = 4, but the real first term is 7, so add 3: the rule is <b>4n + 3</b>. Check it: n = 2 &rarr; 4&times;2+3 = 11. &#10003;</p>
+<p>When the difference itself changes, look at the <span class="term">second differences</span> (the gaps between the gaps). For 2, 6, 12, 20, 30&hellip; the first differences are 4, 6, 8, 10 &mdash; each 2 more than the last &mdash; so the next gap is 12 and the next term is 42. Two families are worth knowing by name: the <span class="hl">square numbers</span> 1, 4, 9, 16&hellip; have nth term n&sup2;, and the <span class="hl">triangular numbers</span> 1, 3, 6, 10&hellip; have nth term n(n + 1) &divide; 2.</p>
 <div class="rw-examples">
   <div class="rw-card">
     <span class="rw-tag">&#127917; Theatre seating</span>
@@ -510,8 +515,9 @@ export const LESSON_EXPANSIONS = {
 <p>A <span class="term">variable</span> is a letter standing in for a number that is unknown or can change.</p>
 <ul class="def-list">
   <li>A <span class="term">term</span> is one piece of an expression, like 3x; the number in front (3) is its <span class="term">coefficient</span>.</li>
-  <li>Only <span class="hl">like terms</span> &mdash; terms with exactly the same letter part &mdash; can be combined: 3x + 5x = 8x, but 3x + 2y cannot be simplified further.</li>
+  <li>Only <span class="hl">like terms</span> &mdash; terms with exactly the same letter part <em>and the same power</em> &mdash; can be combined: 3x + 5x = 8x, but 3x + 2y (different letters) and x + x&sup2; (different powers, since x&sup2; means x&times;x) cannot be combined.</li>
   <li><span class="term">Expanding</span> a bracket means multiplying every term inside it by what's outside: a(b + c) = ab + ac. If the outside number is negative, every term inside flips sign: &minus;2(x &minus; 3) = &minus;2x + 6, not &minus;2x &minus; 6.</li>
+  <li><span class="term">Factorising</span> is expanding in reverse: find the highest common factor of the terms and write it outside a bracket. 6x + 9 share a common factor of 3, so 6x + 9 = <span class="hl">3(2x + 3)</span>. Check by expanding back: 3&times;2x + 3&times;3 = 6x + 9. &#10003;</li>
   <li>Two expressions are equivalent if they give the same value for every number substituted in &mdash; a fact you can spot-check by trying a number in both.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">The engine: distributive property</span><span class="formula">a(b + c) = ab + ac &nbsp;(expanding &mdash; and, reversed, factoring)<br>&minus;2(x &minus; 3) = &minus;2x + 6 &nbsp;(a negative outside flips every sign inside)</span></div>
@@ -561,7 +567,7 @@ export const LESSON_EXPANSIONS = {
 <ul class="def-list">
   <li>A decimal names a precise point on the number line, just like a fraction &mdash; 0.75 is exactly the same point as 3&frasl;4.</li>
   <li>To <span class="term">add or subtract</span> decimals, line up the decimal points so you combine same-size parts: tenths with tenths, hundredths with hundredths.</li>
-  <li>To <span class="term">multiply</span> decimals, count the total decimal places in both numbers &mdash; the answer needs that many decimal places.</li>
+  <li>To <span class="term">multiply</span> decimals, count the total decimal places in both numbers &mdash; the answer needs that many. This works because you are really scaling by tens: 3.6 &times; 0.4 = (36 &divide; 10) &times; (4 &divide; 10) = 36 &times; 4 &divide; 100 = 144 &divide; 100 = <span class="hl">1.44</span>.</li>
   <li>More digits does not mean a bigger number. Compare by place value: 0.5 is bigger than 0.45, even though 0.45 has more digits.</li>
   <li>To <span class="term">divide</span> by a decimal, multiply both numbers by 10 (or 100&hellip;) until the divisor is a whole number &mdash; this doesn't change the answer, just makes the division easier. e.g. 3.5 &divide; 0.5: multiply both by 10 &rarr; 35 &divide; 5 = <b>7</b>.</li>
 </ul>
@@ -617,12 +623,14 @@ export const LESSON_EXPANSIONS = {
 <p>"Per cent" means <span class="hl">per hundred</span> &mdash; a percentage is a fraction locked to a denominator of 100, so it converts freely between forms.</p>
 <ul class="def-list">
   <li>25% = 25&frasl;100 = 0.25 = 1&frasl;4 &mdash; the same amount, written three different ways.</li>
+  <li>To turn any percentage into a decimal, divide by 100 (move the point two places left): 37% = 0.37, 6.5% = 0.065. To go the other way, multiply by 100 (move it two places right): 0.6 = 60%.</li>
   <li>To find a percentage of an amount: <span class="hl">(percent &divide; 100) &times; amount</span>.</li>
   <li>A percentage is always taken <em>of</em> a particular amount, called the base. Change the base, and the same percentage becomes a different actual amount.</li>
   <li>Percentage changes do not simply add: a 10% rise followed by a 10% fall does <em>not</em> return you to the start, because the second 10% is of a different amount.</li>
   <li><span class="term">Working backwards:</span> if you know the price <em>after</em> a discount and need the original, the sale price is not 100% &mdash; it is (100 &minus; discount)% of the original. Divide by that percentage (as a decimal) to undo it.</li>
+  <li>To find the <em>whole</em> when you know a percentage of it, use the <span class="term">1% method</span>: divide by that percentage to get 1%, then multiply by 100. If 15% of a number is 45, then 1% = 45 &divide; 15 = 3, so 100% = <span class="hl">300</span>.</li>
 </ul>
-<div class="kbox"><span class="kbox-tag">Core moves</span><span class="formula">% of amount = (% &divide; 100) &times; amount<br>change is measured against the ORIGINAL</span></div>
+<div class="kbox"><span class="kbox-tag">Core moves</span><span class="formula">% of amount = (% &divide; 100) &times; amount<br>whole from a part: &divide; by the % to get 1%, &times; 100<br>change is measured against the ORIGINAL</span></div>
 <div class="rw-examples">
   <div class="rw-card">
     <span class="rw-tag">&#127991;&#65039; Shop sale</span>
@@ -649,7 +657,7 @@ export const LESSON_EXPANSIONS = {
   <li>Every number has an <span class="term">opposite</span> the same distance from zero; its <span class="term">absolute value</span> is that distance, ignoring the sign.</li>
   <li>Adding is movement along the number line: add a positive number by moving right, add a negative number by moving <span class="hl">left</span>.</li>
   <li><span class="term">Subtracting</span> a number means adding its opposite &mdash; that is why subtracting a negative makes a number bigger.</li>
-  <li>When multiplying: same signs give a <span class="hl">positive</span> answer, different signs give a <span class="hl">negative</span> answer.</li>
+  <li>When multiplying: same signs give a <span class="hl">positive</span> answer, different signs give a <span class="hl">negative</span> answer. Why does negative &times; negative turn positive? Follow the pattern down: 3&times;(&minus;2) = &minus;6, 2&times;(&minus;2) = &minus;4, 1&times;(&minus;2) = &minus;2, 0&times;(&minus;2) = 0 &mdash; each step rises by 2, so (&minus;1)&times;(&minus;2) must be <span class="hl">+2</span>. Reversing a reversal returns the original direction.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Sign rules (with reason)</span><span class="formula">subtracting = adding the opposite<br>same signs give a <b>positive</b><br>different signs give a <b>negative</b></span></div>
 <div class="rw-examples">
@@ -674,6 +682,9 @@ export const LESSON_EXPANSIONS = {
   <li>A ratio can also be written as a fraction of the whole. In the ratio 5 : 6 there are 5 + 6 = 11 parts altogether, so the first quantity is <span class="hl">5&frasl;11</span> of the total and the second is <span class="hl">6&frasl;11</span> of the total.</li>
   <li>Ratios can be simplified exactly like fractions &mdash; divide every part by the same number. e.g. 10 : 12 simplifies to <span class="hl">5 : 6</span> (divide both by 2).</li>
   <li>To share an amount in a given ratio, add the parts first, divide to find the value of <em>one</em> part, then multiply for each share (the <span class="term">unitary method</span>).</li>
+  <li>A <span class="term">rate</span> compares two <em>different</em> units. To find a <span class="term">unit rate</span>, divide so the second quantity becomes 1: $4.50 for 500 g is 4.50 &divide; 500 = <span class="hl">$0.009 per gram</span>. Reducing to "per one" is what lets you compare fairly.</li>
+  <li>To find the better value, compare unit rates: 500 g for $4.50 is $0.009/g, while 750 g for $6.30 is 6.30 &divide; 750 = $0.0084/g &mdash; cheaper per gram, so better value even though it costs more in total.</li>
+  <li><span class="term">Speed</span> is the most common rate: speed = distance &divide; time. 300 km in 5 hours is 300 &divide; 5 = <span class="hl">60 km/h</span>.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Unitary method</span><span class="formula">total &divide; (sum of parts) = one part &rarr; multiply for each share</span></div>
 <div class="rw-examples">
@@ -692,6 +703,11 @@ export const LESSON_EXPANSIONS = {
     <span class="rw-tag">&#128176; Splitting chore money</span>
     <p>Two siblings share $40 for chores in the ratio 3 : 5.</p>
     <p>3 + 5 = 8 parts. $40 &divide; 8 = $5 per part. So they get 3 &times; $5 = <b>$15</b> and 5 &times; $5 = <b>$25</b>.</p>
+  </div>
+  <div class="rw-card">
+    <span class="rw-tag">&#128722; Best value at the shop</span>
+    <p>Which is cheaper per gram: 500 g of rice for $4.50, or 750 g for $6.30?</p>
+    <p>500 g: $4.50 &divide; 500 = <b>$0.009/g</b>. 750 g: $6.30 &divide; 750 = <b>$0.0084/g</b>. The bigger bag wins &mdash; always compare the <em>unit rate</em>, not the total price.</p>
   </div>
 </div>`,
 
