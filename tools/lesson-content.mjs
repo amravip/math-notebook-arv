@@ -623,6 +623,7 @@ export const LESSON_EXPANSIONS = {
 <p>"Per cent" means <span class="hl">per hundred</span> &mdash; a percentage is a fraction locked to a denominator of 100, so it converts freely between forms.</p>
 <ul class="def-list">
   <li>25% = 25&frasl;100 = 0.25 = 1&frasl;4 &mdash; the same amount, written three different ways.</li>
+  <li>To turn any percentage into a decimal, divide by 100 (move the point two places left): 37% = 0.37, 6.5% = 0.065. To go the other way, multiply by 100 (move it two places right): 0.6 = 60%.</li>
   <li>To find a percentage of an amount: <span class="hl">(percent &divide; 100) &times; amount</span>.</li>
   <li>A percentage is always taken <em>of</em> a particular amount, called the base. Change the base, and the same percentage becomes a different actual amount.</li>
   <li>Percentage changes do not simply add: a 10% rise followed by a 10% fall does <em>not</em> return you to the start, because the second 10% is of a different amount.</li>
@@ -656,7 +657,7 @@ export const LESSON_EXPANSIONS = {
   <li>Every number has an <span class="term">opposite</span> the same distance from zero; its <span class="term">absolute value</span> is that distance, ignoring the sign.</li>
   <li>Adding is movement along the number line: add a positive number by moving right, add a negative number by moving <span class="hl">left</span>.</li>
   <li><span class="term">Subtracting</span> a number means adding its opposite &mdash; that is why subtracting a negative makes a number bigger.</li>
-  <li>When multiplying: same signs give a <span class="hl">positive</span> answer, different signs give a <span class="hl">negative</span> answer.</li>
+  <li>When multiplying: same signs give a <span class="hl">positive</span> answer, different signs give a <span class="hl">negative</span> answer. Why does negative &times; negative turn positive? Follow the pattern down: 3&times;(&minus;2) = &minus;6, 2&times;(&minus;2) = &minus;4, 1&times;(&minus;2) = &minus;2, 0&times;(&minus;2) = 0 &mdash; each step rises by 2, so (&minus;1)&times;(&minus;2) must be <span class="hl">+2</span>. Reversing a reversal returns the original direction.</li>
 </ul>
 <div class="kbox"><span class="kbox-tag">Sign rules (with reason)</span><span class="formula">subtracting = adding the opposite<br>same signs give a <b>positive</b><br>different signs give a <b>negative</b></span></div>
 <div class="rw-examples">
