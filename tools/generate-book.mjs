@@ -532,6 +532,19 @@ function applyContentFixes(CURRICULUM, CH) {
     [`${fracHtml(2, 5)} of 60: ${mspan('60 ÷ 5 = 12')}, then ${mspan('12 × 2 = 24')}.`, `Now ${fracHtml(3, 4)} of 24: ${mspan('24 ÷ 4 = 6')}, then ${mspan('6 × 3 = 18')}.`],
   ];
   ofQty.forEach((st, i) => { if (frac.hard[i]) frac.hard[i].steps = st; });
+
+  // Factors: the 5 HCF/LCM solutions asserted the answers with a one-line non-method, even though
+  // the key-box promises the prime-factorisation method ("primes in BOTH" / "highest power of
+  // EACH"). Model it — the shortcut that actually scales to bigger numbers.
+  const fac = byId.factors;
+  const factHcfLcm = [
+    [`Prime factorise each: ${mspan('18 = 2 × 3 × 3')} and ${mspan('24 = 2 × 2 × 2 × 3')}.`, `HCF = the primes in BOTH = ${mspan('2 × 3 = 6')}.`, `LCM = the highest power of every prime = ${mspan('2³ × 3² = 8 × 9 = 72')}.`, `Check: ${mspan('HCF × LCM = 6 × 72 = 432 = 18 × 24')}. ✓`],
+    [`Prime factorise: ${mspan('12 = 2 × 2 × 3')} and ${mspan('16 = 2 × 2 × 2 × 2')}.`, `HCF = primes in both = ${mspan('2 × 2 = 4')}.`, `LCM = highest power of each = ${mspan('2⁴ × 3 = 16 × 3 = 48')}.`],
+    [`Prime factorise: ${mspan('20 = 2 × 2 × 5')} and ${mspan('30 = 2 × 3 × 5')}.`, `HCF = primes in both = ${mspan('2 × 5 = 10')}.`, `LCM = highest power of each = ${mspan('2² × 3 × 5 = 60')}.`],
+    [`Prime factorise: ${mspan('15 = 3 × 5')} and ${mspan('25 = 5 × 5')}.`, `HCF = primes in both = ${mspan('5')}.`, `LCM = highest power of each = ${mspan('3 × 5² = 3 × 25 = 75')}.`],
+    [`Prime factorise: ${mspan('24 = 2 × 2 × 2 × 3')} and ${mspan('36 = 2 × 2 × 3 × 3')}.`, `HCF = primes in both = ${mspan('2 × 2 × 3 = 12')}.`, `LCM = highest power of each = ${mspan('2³ × 3² = 8 × 9 = 72')}.`],
+  ];
+  factHcfLcm.forEach((st, i) => { if (fac.medium[i]) fac.medium[i].steps = st; });
 }
 
 // --- 3. Shared page shell ---
