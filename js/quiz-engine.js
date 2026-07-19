@@ -285,7 +285,7 @@
           else if (type === 'isosceles') { s1 = s2 = ri(r, 5, 9); s3 = ri(r, 2, s1 - 1); }
           else { s1 = ri(r, 5, 7); s2 = s1 + ri(r, 1, 2); s3 = s2 + ri(r, 1, 2); }
           return { q: 'Classify the triangle with side lengths ' + M(s1 + ' cm, ' + s2 + ' cm, ' + s3 + ' cm') + ' as equilateral, isosceles or scalene.', fig: triFig('', '', ''),
-            steps: [type === 'equilateral' ? 'All three sides are equal.' : type === 'isosceles' ? 'Exactly two sides are equal.' : 'No two sides are equal.', 'So the triangle is ' + M(type) + '.'], ans: M(type), accept: [type] };
+            steps: [type === 'equilateral' ? 'All three sides are equal.' : type === 'isosceles' ? 'Exactly two sides are equal.' : 'No two sides are equal.', 'So the triangle is ' + M(type) + '.'], ans: M(type), accept: [type], tileChoices: ['equilateral', 'isosceles', 'scalene'] };
         }
         var a = ri(r, 40, 90), b = ri(r, 30, Math.max(31, 140 - a)), bb = Math.min(b, 140 - a), x = 180 - a - bb;
         return { q: 'Find the missing angle ' + M('x') + ' in a triangle whose other angles are ' + M(a + '°') + ' and ' + M(bb + '°') + '.', fig: triFig(a + '°', bb + '°', 'x'),
@@ -383,7 +383,7 @@
           return { q: 'A triangle has sides ' + M(s1 + ', ' + s2 + ' and ' + s3 + ' cm') + '. Is it right-angled? (yes/no)',
             steps: ['Test the converse: do the two shorter sides² add to the longest side²? ' + s1 + '² + ' + s2 + '² = ' + (s1 * s1 + s2 * s2) + ', and ' + s3 + '² = ' + (s3 * s3) + '.',
               isRight ? 'They are equal, so by the converse of Pythagoras the triangle IS right-angled.' : 'They are not equal, so the triangle is NOT right-angled.'],
-            ans: M(isRight ? 'yes' : 'no'), accept: [isRight ? 'yes' : 'no'] };
+            ans: M(isRight ? 'yes' : 'no'), accept: [isRight ? 'yes' : 'no'], tileChoices: ['yes', 'no'] };
         }
         var a = ri(r, 4, 12), b = ri(r, 3, 11); if (b >= a) b = a - 1; if (b < 3) b = 3; var c = Math.round(Math.sqrt(a * a + b * b) * 10) / 10;
         return { q: 'A right-angled triangle has legs ' + M(a + ' cm') + ' and ' + M(b + ' cm') + '. Find the hypotenuse, to 1 decimal place.', fig: rightTri(a + ' cm', b + ' cm', '?', ri(r, 0, 3)),
@@ -466,11 +466,59 @@
     return { coeff: coeff, cons: cons, letter: letter, termCount: terms.length };
   }
   var FHINT_N = [12, 9, 15, 6];
+  // All the actual shape-recognition, given a pre-normalised raw string and a resolved placeholder
+  // index -- mirrors tools/format-hint.mjs's formatHintCore(). Never called directly from outside
+  // this file; formatHint() below normalises input, handles compound splitting, and retries on
+  // accidental collision with the real answer.
+  function formatHintCore(raw, index) {
+    var n = FHINT_N[((index % FHINT_N.length) + FHINT_N.length) % FHINT_N.length];
+    var m;
+    if ((m = raw.match(/^([a-z]{1,3})\s*=\s*-?\d/i))) return m[1] + ' = ' + n;
+    if ((m = raw.match(/^([a-z]{1,3})\s*=\s*(.+)$/i))) {
+      var linRhs = parseLinearExpr(m[2]);
+      if (linRhs && linRhs.letter) return m[1] + ' = 2' + linRhs.letter + ' + ' + n;
+    }
+    if ((m = raw.match(/^([a-z]{1,3})\s*(>=|<=|≥|≤|>|<)\s*-?\d/i))) return m[1] + ' ' + m[2] + ' ' + n;
+    var RATIOS = ['5 : 2', '3 : 7', '4 : 9', '7 : 3'], MIXED = ['2 1/3', '1 3/5', '3 2/7', '4 1/4'], FRACS = ['3/4', '2/5', '5/8', '1/6'];
+    var SCI = ['2.5 × 10³', '4.1 × 10⁴', '6.3 × 10²', '8.2 × 10⁵'], PCOMP = ['2⁴ (16 > 9)', '3² (9 > 4)', '2⁵ (32 > 25)', '4² (16 > 9)'];
+    if (/^\d+(\.\d+)?\s*:\s*\d+(\.\d+)?$/.test(raw)) return RATIOS[index % RATIOS.length];
+    if (/^\d+\s+\d+\/\d+$/.test(raw)) return MIXED[index % MIXED.length];
+    if (/^\d+\/\d+$/.test(raw)) return FRACS[index % FRACS.length];
+    if (/^\$\d/.test(raw)) return '$' + n;
+    if (/^\d+(\.\d+)?\s*[×x]\s*10[⁰¹²³⁴⁵⁶⁷⁸⁹]+$/i.test(raw)) return SCI[index % SCI.length];
+    if (/^\d+(\s*[×x]\s*\d+)+$/i.test(raw)) {
+      var mcParts = raw.split(/[×x]/i), PRIMES = [2, 3, 5, 7, 11, 13], mcOut = [];
+      for (var pi = 0; pi < mcParts.length; pi++) mcOut.push(PRIMES[pi % PRIMES.length]);
+      return mcOut.join(' × ');
+    }
+    if (/^\d+(\.\d+)?(\s*\+\s*\d+(\.\d+)?)+$/.test(raw)) {
+      var pcParts = raw.split(/\+/), pcOut = [];
+      for (var qi = 0; qi < pcParts.length; qi++) pcOut.push(FHINT_N[(index + qi) % FHINT_N.length]);
+      return pcOut.join(' + ');
+    }
+    if (/^\d+[²³⁴⁵⁶⁷⁸⁹]?\s+\(\d+\s*[<>]\s*\d+\)$/.test(raw)) return PCOMP[index % PCOMP.length];
+    var lin = parseLinearExpr(raw);
+    if (lin && lin.letter && lin.termCount >= 2) {
+      var coeffPart = (lin.coeff < 0 ? ('−4' + lin.letter) : ('4' + lin.letter));
+      var consPart = lin.cons < 0 ? ' − 1' : ' + 1';
+      return coeffPart + consPart;
+    }
+    if ((m = raw.match(/^-?(?:\d{1,3}(?:[ ,]\d{3})+|\d+)(\.\d+)?(\s*)([a-zA-Z°²³%\/]+)$/))) return n + m[2] + m[3];
+    if ((m = raw.match(/^-?\d+(\.\d+)?%\s+([a-z]+)$/i))) return n + '% ' + m[2];
+    if ((m = raw.match(/^(less than|more than|at least|at most|greater than)\s+-?\d+(\.\d+)?(\s*)([a-zA-Z°²³]+)$/i))) return m[1] + ' ' + n + m[3] + m[4];
+    if ((m = raw.match(/^([a-z]+)\s+-?\d+(\.\d+)?(\s*)([a-zA-Z°²³]+)$/i))) return m[1] + ' ' + n + m[3] + m[4];
+    if ((m = raw.match(/^([a-z]+)\s+-?\d+(\.\d+)?$/i))) return m[1] + ' ' + n;
+    if ((m = raw.match(/^-?\d+(st|nd|rd|th)\s+([a-z]+)$/i))) return n + m[1].toLowerCase() + ' ' + m[2];
+    var LETEXP = ['a⁵', 'a⁴', 'a⁶', 'a⁷'];
+    if (/^[a-z][⁰¹²³⁴⁵⁶⁷⁸⁹]+$/i.test(raw)) return LETEXP[index % LETEXP.length];
+    if ((m = raw.match(/^-?\d+(\.\d+)?\s*([a-zA-Z]+)\s+for\s+\$-?\d+(\.\d+)?$/i))) return n + ' ' + m[2] + ' for $' + FHINT_N[(index + 1) % FHINT_N.length];
+    if ((m = raw.match(/^-?\d+(\.\d+)?\s*h\s+-?\d+(\.\d+)?\s*min$/i))) return n + ' h ' + FHINT_N[(index + 1) % FHINT_N.length] + ' min';
+    return null;
+  }
   function formatHint(acceptRaw, index) {
     index = index || 0;
     if (!acceptRaw) return null;
     var raw = String(acceptRaw).trim().replace(/[−–—]/g, '-');
-    var n = FHINT_N[index % FHINT_N.length];
     if (/^\(\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*\)$/.test(raw)) return '(1, 2)';
     var compoundParts = raw.split(/\s+and\s+|[,;]\s*/i);
     if (compoundParts.length > 1) {
@@ -480,19 +528,64 @@
       if (filled.some(function (h) { return h === null; })) return null;
       return filled.join(' and ');
     }
-    var m;
-    if ((m = raw.match(/^([a-z]{1,3})\s*=\s*-?\d/i))) return m[1] + ' = 7';
-    if (/^\d+(\.\d+)?\s*:\s*\d+(\.\d+)?$/.test(raw)) return '5 : 2';
-    if (/^\d+\s+\d+\/\d+$/.test(raw)) return '2 1/3';
-    if (/^\d+\/\d+$/.test(raw)) return '3/4';
-    if (/^\$\d/.test(raw)) return '$' + n;
-    var lin = parseLinearExpr(raw);
-    if (lin && lin.letter && lin.termCount >= 2) {
-      var coeffPart = (lin.coeff < 0 ? ('−4' + lin.letter) : ('4' + lin.letter));
-      var consPart = lin.cons < 0 ? ' − 1' : ' + 1';
-      return coeffPart + consPart;
+    for (var attempt = 0; attempt < FHINT_N.length; attempt++) {
+      var hint = formatHintCore(raw, index + attempt);
+      if (!hint || hint.toLowerCase() !== raw.toLowerCase()) return hint;
     }
-    if ((m = raw.match(/^-?\d+(\.\d+)?(\s*)([a-zA-Z°²³\/]+)$/))) return n + m[2] + m[3];
+    return null;
+  }
+
+  // ---- tile-spec generator (ES5 port of tools/tile-spec.mjs) ----
+  // Dynamic topics' accept[] values are only known at runtime, so this mirrors the static build's
+  // generic tile-spec architecture (atoms + compose) just for the shapes that actually occur here:
+  // coordinates (points, translations, reflections, rotations, enlargements), classified from the
+  // accept string the same way the static deriveTileSpec is, plus "choice" (classification / yes-no)
+  // shapes wired explicitly per generator via e.tileChoices, since choice decoys (e.g. the other two
+  // triangle types) can't be derived from the accept string alone. Doesn't need to byte-for-byte
+  // match tools/tile-spec.mjs's output — see that file's own header for why.
+  var tsUid = 0;
+  function tsFreshId(prefix) { return prefix + (tsUid++); }
+  function tsNumberPart(value, decoys) {
+    var id = tsFreshId('n'), seen = {}, vals = [];
+    [String(value)].concat(decoys.map(String)).forEach(function (v) { if (!seen[v]) { seen[v] = true; vals.push(v); } });
+    return {
+      slots: [{ id: id, kind: id }],
+      tiles: vals.map(function (v, i) { return { id: id + '_' + i, label: v, value: v, kind: id }; }),
+      template: [{ slot: id }]
+    };
+  }
+  function tsChoicePart(correct, decoys) {
+    var id = tsFreshId('choice'), seen = {}, vals = [];
+    [correct].concat(decoys).forEach(function (v) { if (!seen[v]) { seen[v] = true; vals.push(v); } });
+    return {
+      slots: [{ id: id, kind: id }],
+      tiles: vals.map(function (v, i) { return { id: id + '_' + i, label: v, value: v, kind: id }; }),
+      template: [{ slot: id }]
+    };
+  }
+  function tsCompose(pieces) {
+    var slots = [], tiles = [], template = [];
+    pieces.forEach(function (p) {
+      if (typeof p === 'string') { template.push({ text: p }); return; }
+      slots = slots.concat(p.slots); tiles = tiles.concat(p.tiles); template = template.concat(p.template);
+    });
+    return { slots: slots, tiles: tiles, template: template };
+  }
+  // Separator is a bare ',' (no space) to match coordAcc's exact accept-string format above
+  // ('(' + x + ',' + y + ')') — normAns strips whitespace either way, but matching byte-for-byte
+  // keeps the tile-assembled "Your answer" display consistent with the canonical answer text.
+  function coordinateTileSpec(x, y) {
+    return tsCompose(['(', tsNumberPart(x, [x + 1, x - 1, -x]), ',', tsNumberPart(y, [y + 1, y - 1, -y]), ')']);
+  }
+  function choiceTileSpec(correct, decoys) { return tsChoicePart(correct, decoys); }
+  // Coordinate is the only shape that occurs in a dynamic topic's accept[0] (see coordAcc above) —
+  // plain numbers/angles/measurements are deliberately left free-text-only, same principle as the
+  // static classifier (no real format ambiguity to resolve with tiles).
+  function deriveDynamicTileSpec(raw) {
+    var v = String(raw).trim(), m;
+    if ((m = v.match(/^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)$/))) {
+      return coordinateTileSpec(Number(m[1]), Number(m[2]));
+    }
     return null;
   }
 
@@ -550,6 +643,7 @@
   window.QuizEngine = {
     GEN: GEN, INTRO_FIG: INTRO_FIG, INTRO_CAP: INTRO_CAP,
     formatHint: formatHint, parseLinearExpr: parseLinearExpr,
+    deriveDynamicTileSpec: deriveDynamicTileSpec, coordinateTileSpec: coordinateTileSpec, choiceTileSpec: choiceTileSpec,
 
     // Renders the practice tabs/panes, worked-examples sample grid, and assignment grid for a
     // dynamic topic, and registers each item's accept[] into window.TOPIC_CHECK for grading.
@@ -564,11 +658,17 @@
           var kkey = topicId + '|' + key + '|' + idx;
           if (e.accept) window.TOPIC_CHECK[kkey] = e.accept;
           var hint = e.accept ? formatHint(e.accept[0]) : null;
+          var tileSpec = e.accept ? (e.tileChoices ? choiceTileSpec(e.accept[0], e.tileChoices.filter(function (c) { return c !== e.accept[0]; })) : deriveDynamicTileSpec(e.accept[0])) : null;
+          var useTiles = !!tileSpec;
+          var tileWidget = useTiles ? '<div class="tile-builder" data-spec=\'' + JSON.stringify(tileSpec) + '\'></div>' : '';
+          var tileToggle = useTiles ? '<button class="tb-toggle" type="button">&#8987; Prefer to type your answer?</button>' : '';
           return '<div class="ex" data-key="' + kkey + '" data-tid="' + topicId + '">' +
             '<div class="ex-top"><span class="num">' + (idx + 1) + '</span><div class="q">' + e.q + '</div></div>' +
             (e.fig ? '<div class="figwrap">' + e.fig + '</div>' : '') +
-            '<div class="attempt"><input class="ans-input" type="text" placeholder="Write your answer here&hellip;" aria-label="Your answer">' +
+            '<div class="attempt">' + tileWidget +
+            '<input class="ans-input" type="text" placeholder="Write your answer here&hellip;" aria-label="Your answer"' + (useTiles ? ' hidden' : '') + '>' +
             '<button class="markbtn">✓ Mark answer</button><button class="reveal locked">🔒 Show solution</button></div>' +
+            tileToggle +
             (hint ? '<p class="fhint">Format: e.g. <span class="fhint-ex">' + hint + '</span></p>' : '') +
             '<div class="sol"><div class="your-answer"><span class="lbl">Your answer</span><span class="txt"></span></div>' +
             '<div class="lead">Approach</div><p class="approach">' + approach + '</p>' +

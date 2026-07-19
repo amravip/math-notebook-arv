@@ -57,3 +57,69 @@ export function mulberry32(a) {
 }
 
 export function stripTags(html) { return String(html).replace(/<[^>]+>/g, ''); }
+
+// --- Minimal (but real, not stubbed) DOM shim for driving js/tile-builder.js ---
+// Real classList/className sync, real parent-child appendChild/remove, real addEventListener/
+// dispatchEvent — enough to simulate genuine click sequences against the actual shipped widget
+// code, not a re-implementation of its logic. Shared across every tile-spec-shape test.
+function makeClassList() {
+  const set = new Set();
+  return {
+    add: (...c) => c.forEach((x) => set.add(x)),
+    remove: (...c) => c.forEach((x) => set.delete(x)),
+    toggle: (c, force) => { if (force === undefined) { set.has(c) ? set.delete(c) : set.add(c); } else if (force) set.add(c); else set.delete(c); },
+    contains: (c) => set.has(c),
+    get _set() { return set; },
+  };
+}
+function makeNode(tag) {
+  const listeners = {};
+  const node = {
+    tagName: (tag || 'div').toUpperCase(), children: [], parentNode: null, dataset: {}, style: {},
+    disabled: false, hidden: false, _text: '', _html: '', type: '',
+    get textContent() { return this._text; }, set textContent(v) { this._text = String(v); this.children = []; },
+    get innerHTML() { return this._html; }, set innerHTML(v) { this._html = v; },
+    classList: null,
+    appendChild(child) { if (child.parentNode) child.parentNode.remove.call(child); child.parentNode = this; this.children.push(child); return child; },
+    remove() { if (this.parentNode) { const i = this.parentNode.children.indexOf(this); if (i >= 0) this.parentNode.children.splice(i, 1); this.parentNode = null; } },
+    addEventListener(t, f) { (listeners[t] = listeners[t] || []).push(f); },
+    dispatchEvent(e) { (listeners[e.type] || []).forEach((f) => f(e)); return true; },
+    click() { this.dispatchEvent({ type: 'click', target: this }); },
+    setAttribute() {},
+  };
+  node.classList = makeClassList();
+  Object.defineProperty(node, 'className', {
+    get() { return [...this.classList._set].join(' '); },
+    set(v) { this.classList._set.clear(); String(v).split(/\s+/).filter(Boolean).forEach((c) => this.classList._set.add(c)); },
+  });
+  return node;
+}
+
+export function loadTileBuilder() {
+  const src = fs.readFileSync(path.join(ROOT, 'js', 'tile-builder.js'), 'utf-8');
+  const sandbox = { window: {}, document: { createElement: (t) => makeNode(t), addEventListener: () => {}, querySelectorAll: () => [] }, console };
+  vm.createContext(sandbox);
+  vm.runInContext(src, sandbox, { filename: 'js/tile-builder.js' });
+  if (!sandbox.window.TileBuilder) throw new Error('tile-builder.js did not expose window.TileBuilder — sandbox stub mismatch?');
+  return sandbox.window.TileBuilder;
+}
+
+// Mounts a spec and returns a small context with helpers addressing slots by POSITION (index into
+// spec.slots) rather than a fixed kind literal — the real kind strings are auto-generated/unique
+// per spec (see tools/tile-spec.mjs), so tests can't hardcode them the way the original
+// patterns-only pilot did.
+export function mountTileSpec(TileBuilder, spec) {
+  const host = makeNode('div'), input = makeNode('input');
+  TileBuilder.mount(host, input, spec);
+  const frame = host.children[0], pool = host.children[1];
+  const slotEls = {};
+  frame.children.forEach((c) => { if (c.dataset.slot) slotEls[c.dataset.slot] = c; });
+  function placeAt(slotIndex, value) {
+    const slot = spec.slots[slotIndex];
+    const tile = pool.children.find((t) => t.dataset.kind === slot.kind && t.innerHTML === String(value));
+    if (!tile) throw new Error(`tile not found: value=${value} kind=${slot.kind} (slot index ${slotIndex}, id ${slot.id})`);
+    tile.click(); slotEls[slot.id].click();
+  }
+  function placeAll(values) { values.forEach((v, i) => placeAt(i, v)); }
+  return { host, input, pool, slotEls, placeAt, placeAll };
+}
