@@ -466,11 +466,59 @@
     return { coeff: coeff, cons: cons, letter: letter, termCount: terms.length };
   }
   var FHINT_N = [12, 9, 15, 6];
+  // All the actual shape-recognition, given a pre-normalised raw string and a resolved placeholder
+  // index -- mirrors tools/format-hint.mjs's formatHintCore(). Never called directly from outside
+  // this file; formatHint() below normalises input, handles compound splitting, and retries on
+  // accidental collision with the real answer.
+  function formatHintCore(raw, index) {
+    var n = FHINT_N[((index % FHINT_N.length) + FHINT_N.length) % FHINT_N.length];
+    var m;
+    if ((m = raw.match(/^([a-z]{1,3})\s*=\s*-?\d/i))) return m[1] + ' = ' + n;
+    if ((m = raw.match(/^([a-z]{1,3})\s*=\s*(.+)$/i))) {
+      var linRhs = parseLinearExpr(m[2]);
+      if (linRhs && linRhs.letter) return m[1] + ' = 2' + linRhs.letter + ' + ' + n;
+    }
+    if ((m = raw.match(/^([a-z]{1,3})\s*(>=|<=|≥|≤|>|<)\s*-?\d/i))) return m[1] + ' ' + m[2] + ' ' + n;
+    var RATIOS = ['5 : 2', '3 : 7', '4 : 9', '7 : 3'], MIXED = ['2 1/3', '1 3/5', '3 2/7', '4 1/4'], FRACS = ['3/4', '2/5', '5/8', '1/6'];
+    var SCI = ['2.5 × 10³', '4.1 × 10⁴', '6.3 × 10²', '8.2 × 10⁵'], PCOMP = ['2⁴ (16 > 9)', '3² (9 > 4)', '2⁵ (32 > 25)', '4² (16 > 9)'];
+    if (/^\d+(\.\d+)?\s*:\s*\d+(\.\d+)?$/.test(raw)) return RATIOS[index % RATIOS.length];
+    if (/^\d+\s+\d+\/\d+$/.test(raw)) return MIXED[index % MIXED.length];
+    if (/^\d+\/\d+$/.test(raw)) return FRACS[index % FRACS.length];
+    if (/^\$\d/.test(raw)) return '$' + n;
+    if (/^\d+(\.\d+)?\s*[×x]\s*10[⁰¹²³⁴⁵⁶⁷⁸⁹]+$/i.test(raw)) return SCI[index % SCI.length];
+    if (/^\d+(\s*[×x]\s*\d+)+$/i.test(raw)) {
+      var mcParts = raw.split(/[×x]/i), PRIMES = [2, 3, 5, 7, 11, 13], mcOut = [];
+      for (var pi = 0; pi < mcParts.length; pi++) mcOut.push(PRIMES[pi % PRIMES.length]);
+      return mcOut.join(' × ');
+    }
+    if (/^\d+(\.\d+)?(\s*\+\s*\d+(\.\d+)?)+$/.test(raw)) {
+      var pcParts = raw.split(/\+/), pcOut = [];
+      for (var qi = 0; qi < pcParts.length; qi++) pcOut.push(FHINT_N[(index + qi) % FHINT_N.length]);
+      return pcOut.join(' + ');
+    }
+    if (/^\d+[²³⁴⁵⁶⁷⁸⁹]?\s+\(\d+\s*[<>]\s*\d+\)$/.test(raw)) return PCOMP[index % PCOMP.length];
+    var lin = parseLinearExpr(raw);
+    if (lin && lin.letter && lin.termCount >= 2) {
+      var coeffPart = (lin.coeff < 0 ? ('−4' + lin.letter) : ('4' + lin.letter));
+      var consPart = lin.cons < 0 ? ' − 1' : ' + 1';
+      return coeffPart + consPart;
+    }
+    if ((m = raw.match(/^-?(?:\d{1,3}(?:[ ,]\d{3})+|\d+)(\.\d+)?(\s*)([a-zA-Z°²³%\/]+)$/))) return n + m[2] + m[3];
+    if ((m = raw.match(/^-?\d+(\.\d+)?%\s+([a-z]+)$/i))) return n + '% ' + m[2];
+    if ((m = raw.match(/^(less than|more than|at least|at most|greater than)\s+-?\d+(\.\d+)?(\s*)([a-zA-Z°²³]+)$/i))) return m[1] + ' ' + n + m[3] + m[4];
+    if ((m = raw.match(/^([a-z]+)\s+-?\d+(\.\d+)?(\s*)([a-zA-Z°²³]+)$/i))) return m[1] + ' ' + n + m[3] + m[4];
+    if ((m = raw.match(/^([a-z]+)\s+-?\d+(\.\d+)?$/i))) return m[1] + ' ' + n;
+    if ((m = raw.match(/^-?\d+(st|nd|rd|th)\s+([a-z]+)$/i))) return n + m[1].toLowerCase() + ' ' + m[2];
+    var LETEXP = ['a⁵', 'a⁴', 'a⁶', 'a⁷'];
+    if (/^[a-z][⁰¹²³⁴⁵⁶⁷⁸⁹]+$/i.test(raw)) return LETEXP[index % LETEXP.length];
+    if ((m = raw.match(/^-?\d+(\.\d+)?\s*([a-zA-Z]+)\s+for\s+\$-?\d+(\.\d+)?$/i))) return n + ' ' + m[2] + ' for $' + FHINT_N[(index + 1) % FHINT_N.length];
+    if ((m = raw.match(/^-?\d+(\.\d+)?\s*h\s+-?\d+(\.\d+)?\s*min$/i))) return n + ' h ' + FHINT_N[(index + 1) % FHINT_N.length] + ' min';
+    return null;
+  }
   function formatHint(acceptRaw, index) {
     index = index || 0;
     if (!acceptRaw) return null;
     var raw = String(acceptRaw).trim().replace(/[−–—]/g, '-');
-    var n = FHINT_N[index % FHINT_N.length];
     if (/^\(\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*\)$/.test(raw)) return '(1, 2)';
     var compoundParts = raw.split(/\s+and\s+|[,;]\s*/i);
     if (compoundParts.length > 1) {
@@ -480,20 +528,10 @@
       if (filled.some(function (h) { return h === null; })) return null;
       return filled.join(' and ');
     }
-    var m;
-    if ((m = raw.match(/^([a-z]{1,3})\s*=\s*-?\d/i))) return m[1] + ' = 7';
-    if (/^\d+(\.\d+)?\s*:\s*\d+(\.\d+)?$/.test(raw)) return '5 : 2';
-    if (/^\d+\s+\d+\/\d+$/.test(raw)) return '2 1/3';
-    if (/^\d+\/\d+$/.test(raw)) return '3/4';
-    if (/^\$\d/.test(raw)) return '$' + n;
-    var lin = parseLinearExpr(raw);
-    if (lin && lin.letter && lin.termCount >= 2) {
-      var coeffPart = (lin.coeff < 0 ? ('−4' + lin.letter) : ('4' + lin.letter));
-      var consPart = lin.cons < 0 ? ' − 1' : ' + 1';
-      return coeffPart + consPart;
+    for (var attempt = 0; attempt < FHINT_N.length; attempt++) {
+      var hint = formatHintCore(raw, index + attempt);
+      if (!hint || hint.toLowerCase() !== raw.toLowerCase()) return hint;
     }
-    if ((m = raw.match(/^-?\d+(\.\d+)?(\s*)([a-zA-Z°²³\/]+)$/))) return n + m[2] + m[3];
-    if ((m = raw.match(/^([a-z]+)\s+-?\d+(\.\d+)?$/i))) return m[1] + ' ' + n;
     return null;
   }
 
