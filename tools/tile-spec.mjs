@@ -71,6 +71,23 @@ function linearExprPart(coeff, cons, letter) {
   };
 }
 
+// Superscript digits 0-9, index == the digit — mirrors js/topic-interactions.js's SUP_DIGITS.
+const SUP_DIGITS = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+
+// One exponent slot for scientific notation: tiles are labelled with the actual superscript
+// character (not a plain digit), so placing one writes the real glyph the marking engine's accept
+// string uses — a plain-digit tile would assemble "10^4" byte-for-byte different from "10⁴" even
+// though canonSciNotation() in topic-interactions.js treats them as equivalent for marking.
+function exponentPart(value, decoys) {
+  const id = freshId('exp');
+  const vals = [...new Set([value, ...decoys])].filter((v) => v >= 0 && v <= 9);
+  return {
+    slots: [{ id, kind: id }],
+    tiles: vals.map((v, i) => ({ id: `${id}_${i}`, label: SUP_DIGITS[v], value: SUP_DIGITS[v], kind: id })),
+    template: [{ slot: id }],
+  };
+}
+
 // A single-slot "pick one" part: the real answer plus wrong-option decoys, all placed into ONE
 // slot. Reuses the exact same widget as every multi-slot spec (a spec with one slot is just a
 // degenerate case) — this is how a word/classification answer ("equilateral", "yes") gets tile
@@ -143,6 +160,21 @@ export function choiceTileSpec(correct, decoys) {
   return choicePart(correct, decoys);
 }
 
+// Scientific notation "4.5 × 10⁴" (or a whole-number coefficient with no decimal, "6 × 10⁵") —
+// exactly the shape a real keyboard can't type without knowing "x"/"*" and "^N" are accepted
+// alternatives for ×/superscript (see canonSciNotation in topic-interactions.js), so tiles remove
+// the need to type either symbol at all. `frac` is null for a whole-number coefficient.
+export function scientificTileSpec(whole, frac, exp) {
+  const pieces = [numberPart(whole, [whole + 1, Math.max(1, whole - 1), whole + 2].filter((v) => v <= 9))];
+  if (frac !== null) {
+    pieces.push('.');
+    pieces.push(numberPart(frac, [(frac + 1) % 10, (frac + 3) % 10, (frac + 7) % 10]));
+  }
+  pieces.push(' × 10');
+  pieces.push(exponentPart(exp, [exp + 1, Math.max(0, exp - 1), exp + 2]));
+  return compose(pieces);
+}
+
 // Classifies a RAW accept string into a tile spec, mirroring format-hint.mjs's own shape
 // recognition (same regex order/spirit) so "gets a hint" and "gets a tile builder" stay consistent
 // by construction. Returns null for anything not confidently recognized — bare plain numbers and
@@ -188,6 +220,12 @@ export function deriveTileSpec(raw) {
   // Mixed number "w n/d", then plain fraction "n/d".
   if ((m = v.match(/^(\d+)\s+(\d+)\/(\d+)$/))) return mixedNumberTileSpec(Number(m[1]), Number(m[2]), Number(m[3]));
   if ((m = v.match(/^(\d+)\/(\d+)$/))) return fractionTileSpec(Number(m[1]), Number(m[2]));
+
+  // Scientific notation "4.5 × 10⁴" (decimal part optional: "6 × 10⁵").
+  if ((m = v.match(/^(\d+)(?:\.(\d))?\s*×\s*10([⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/))) {
+    const expDigits = [...m[3]].map((c) => SUP_DIGITS.indexOf(c)).join('');
+    return scientificTileSpec(Number(m[1]), m[2] === undefined ? null : Number(m[2]), Number(expDigits));
+  }
 
   // Standalone linear expression (Expressions: "3x + 12") — never a compound (no "and"/","/";"),
   // degree <=1, and needs >=2 terms for the exact same reason format-hint.mjs requires it: a bare

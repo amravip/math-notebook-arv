@@ -135,3 +135,26 @@ test('regression: fractionHtml can never inject HTML, no matter what was typed',
   const attempts = ['<script>alert(1)</script>', '2/3<img src=x onerror=alert(1)>', '1</span>5/12', '2/3" onmouseover="alert(1)'];
   attempts.forEach((a) => assert.equal(fractionHtml(a), null, a));
 });
+
+test('scientific notation: keyboard-typeable alternatives to ×/superscript are accepted', () => {
+  // A real keyboard can't type × or ⁴ directly -- "x"/"*" for × and "^4" for ⁴ must mark correct
+  // against the real accept value ("7.8 × 10⁴"), with or without spaces.
+  assert.equal(isCorrect('7.8 x 10^4', ['7.8 × 10⁴']), true);
+  assert.equal(isCorrect('7.8*10^4', ['7.8 × 10⁴']), true);
+  assert.equal(isCorrect('7.8x10^4', ['7.8 × 10⁴']), true);
+  assert.equal(isCorrect('7.8 × 10^4', ['7.8 × 10⁴']), true);
+  assert.equal(isCorrect('6 x 10^5', ['6 × 10⁵']), true); // whole-number coefficient, no decimal point
+});
+
+test('regression: scientific notation exponent 2/3 must not be silently stripped by the generic °²³ unit-decoration strip', () => {
+  // 10² and 10³ share their exponent characters with "cm²"/"cm³" area/volume units, which normAns
+  // strips as decorative. Without canonSciNotation running first, "5.1 × 10" (exponent left off
+  // entirely) would compare equal to the real "5.1 × 10²" -- a false positive that lets a genuinely
+  // incomplete answer mark as correct. Checked via BOTH the exact-match path (isCorrect's own
+  // normAns comparison) and the compound-parts fallback (normParts/partsMatch), since each had its
+  // own independent copy of the same °²³ strip and both needed the fix.
+  assert.equal(isCorrect('5.1 × 10', ['5.1 × 10²']), false);
+  assert.equal(isCorrect('6.2 × 10', ['6.2 × 10³']), false);
+  assert.equal(isCorrect('5.1 x 10^2', ['5.1 × 10²']), true);   // the correct exponent still marks right
+  assert.equal(isCorrect('5 x 10^2', ['5.1 × 10²']), false);    // a genuinely wrong coefficient stays wrong
+});

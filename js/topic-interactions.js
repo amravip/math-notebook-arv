@@ -13,8 +13,25 @@
   // capture at parse time would permanently see an empty object.
   function CHECK() { return window.TOPIC_CHECK || {}; }
 
+  // Superscript digits 0-9, index == the digit they represent — used to convert scientific-notation
+  // exponents ("10³") to/from plain digits.
+  var SUP_DIGITS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+
+  // Canonicalises scientific notation ("4.5 × 10⁴") to a plain "4.5e4" form, BEFORE either normAns
+  // or normParts strips ²/³ as a generic unit decoration (they'd otherwise silently delete a 10² or
+  // 10³ exponent — the same ²/³ characters "cm²"/"cm³" use — making an answer with the exponent left
+  // off compare equal to the real one). Also accepts the keyboard-typeable "x"/"*" for × and "^4" for
+  // ⁴, not just the exact accept-string glyphs, since a real keyboard can't type ×/⁴ directly.
+  function canonSciNotation(x) {
+    return x.replace(/(-?\d+(?:\.\d+)?)\s*[×x*]\s*10\s*\^?\s*([⁰¹²³⁴⁵⁶⁷⁸⁹]+|-?\d+)/g, function (_, base, exp) {
+      var expDigits = exp.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, function (c) { return SUP_DIGITS.indexOf(c); });
+      return base + 'e' + expDigits;
+    });
+  }
+
   function normAns(s) {
-    var x = String(s).toLowerCase().trim().replace(/\s+/g, '');
+    var x = String(s).toLowerCase().trim();
+    x = canonSciNotation(x).replace(/\s+/g, '');
     // Answer keys use the true minus sign (− U+2212); nobody's keyboard types that. Normalise it
     // (and the visually-identical en/em dashes some autocorrect substitutes) to a plain hyphen so
     // "-4" and "−4" compare equal.
@@ -36,6 +53,10 @@
   // style thousands groupings are joined BEFORE splitting so they don't read as two parts.
   function normParts(s) {
     var x = String(s).toLowerCase().trim();
+    // Scientific notation BEFORE anything else — same reasoning as normAns's canonSciNotation call:
+    // without it, "×" survives the filler filter below as its own bogus "part", and the generic
+    // °²³ strip deletes 10²/10³'s exponent, letting an answer with the exponent left off match.
+    x = canonSciNotation(x);
     // Normalise the true minus sign (and en/em dashes) to a plain hyphen, exactly as normAns does —
     // otherwise a multi-part answer containing a negative (e.g. "9 and −9") only matches when typed
     // with the "and" separator, and parseFloat can't read "−9" for the numeric-tolerance compare.
