@@ -242,7 +242,7 @@ const STATIC_MODELS = {
   patterns: `<div class="cap">Position &rarr; term, common difference +4</div>
     <svg class="viz" viewBox="0 0 260 90" width="260" role="img" aria-label="Table of sequence positions 1 to 4 against terms 3, 7, 11, 15 with a plus 4 arrow between each">
       ${[3, 7, 11, 15].map((v, i) => `<rect class="fig-shape" x="${10 + i * 62}" y="30" width="46" height="34" rx="6"/><text class="fig-txt" x="${33 + i * 62}" y="52" text-anchor="middle">${v}</text><text class="fig-txt soft" x="${33 + i * 62}" y="20" text-anchor="middle">n=${i + 1}</text>`).join('')}
-      ${[0, 1, 2].map(i => `<text class="fig-txt ang" x="${68 + i * 62}" y="52" text-anchor="middle">+4</text>`).join('')}
+      ${[0, 1, 2].map(i => `<text class="fig-txt ang" x="${64 + i * 62}" y="52" text-anchor="middle">+4</text>`).join('')}
     </svg>`,
 
   expressions: `<div class="cap">Algebra tiles for 3x + 2</div>
@@ -285,7 +285,7 @@ const STATIC_MODELS = {
   conversions: `<div class="cap">Metric ladder &mdash; each step is a power of ten</div>
     <svg class="viz" viewBox="0 0 260 70" width="260" role="img" aria-label="km to m to cm to mm, connected by times 1000, times 100 and times 10 arrows">
       ${['km', 'm', 'cm', 'mm'].map((u, i) => `<rect class="fig-shape" x="${10 + i * 62}" y="15" width="46" height="30" rx="7"/><text class="fig-txt" x="${33 + i * 62}" y="35" text-anchor="middle">${u}</text>`).join('')}
-      ${['&times;1000', '&times;100', '&times;10'].map((lab, i) => `<line class="fig-arr" x1="${58 + i * 62}" y1="30" x2="${68 + i * 62}" y2="30" marker-end="url(#cArrow)"/><text class="fig-txt soft" x="${63 + i * 62}" y="18" text-anchor="middle" style="font-size:9px">${lab}</text>`).join('')}
+      ${['&times;1000', '&times;100', '&times;10'].map((lab, i) => `<line class="fig-arr" x1="${58 + i * 62}" y1="30" x2="${68 + i * 62}" y2="30" marker-end="url(#cArrow)"/><text class="fig-txt soft" x="${64 + i * 62}" y="11" text-anchor="middle" style="font-size:9px">${lab}</text>`).join('')}
       <defs><marker id="cArrow" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--ink-soft)"/></marker></defs>
     </svg>`,
 
