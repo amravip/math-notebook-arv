@@ -70,6 +70,18 @@ test('all-bare-number compounds get no hint (no ambiguity beyond the separator)'
   assert.equal(formatHint('9 and −9'), null);
 });
 
+test('regression: "label number" compounds (statistics mode/range, mean/median) now hint correctly', () => {
+  // 18 statistics answers ("mode 7, range 5", "mean 6, median 6") previously got no hint at all,
+  // even though the marking engine's own normParts strips the word labels as filler -- "7, 5" marks
+  // identical to "mode 7, range 5" -- so a learner had no way to know the label was optional.
+  assert.equal(formatHint('mode 7, range 5'), 'mode 12 and range 9');
+  assert.equal(formatHint('mean 6, median 6'), 'mean 12 and median 9');
+  // A bare word with no trailing number (the answer itself, e.g. "mode"/"median" alone) must still
+  // get no hint -- there's no numeric ambiguity to clarify.
+  assert.equal(formatHint('mode'), null);
+  assert.equal(formatHint('median'), null);
+});
+
 test('regression: a compound with one hintable and one bare-number part fills the number distinctly', () => {
   // Previously both currency parts rendered the SAME fixed placeholder ("$12 and $12"), visually
   // implying the two real values were equal.

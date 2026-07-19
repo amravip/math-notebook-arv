@@ -493,6 +493,7 @@
       return coeffPart + consPart;
     }
     if ((m = raw.match(/^-?\d+(\.\d+)?(\s*)([a-zA-Z°²³\/]+)$/))) return n + m[2] + m[3];
+    if ((m = raw.match(/^([a-z]+)\s+-?\d+(\.\d+)?$/i))) return m[1] + ' ' + n;
     return null;
   }
 

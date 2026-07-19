@@ -104,5 +104,12 @@ export function formatHint(acceptRaw, index = 0) {
   // Preserve whichever spacing the original used (m[2]) — "16th" has none, "45 km/h" has one — so
   // an ordinal doesn't grow a spurious space ("12 th") that a unit-suffixed value wouldn't have.
   if ((m = raw.match(/^-?\d+(\.\d+)?(\s*)([a-zA-Z°²³/]+)$/))) return `${n}${m[2]}${m[3]}`;        // number + unit
-  return null;   // bare plain number or a word answer -> the generic placeholder is enough
+
+  // A word LABEL followed by a number ("mode 7", "mean 6") — distinct from "number + unit" above
+  // (label comes first here) and common in statistics answers. The marking engine's own normParts
+  // strips bare-letter tokens as filler, so "mode 7, range 5" and "7, 5" mark identically — but a
+  // learner has no way to know that without a hint. Keep the real word (it's a structural label,
+  // like the equation letter above, not the answer's value) and vary only the number.
+  if ((m = raw.match(/^([a-z]+)\s+-?\d+(\.\d+)?$/i))) return `${m[1]} ${n}`;                     // label + number
+  return null;   // bare plain number or a bare word answer -> the generic placeholder is enough
 }

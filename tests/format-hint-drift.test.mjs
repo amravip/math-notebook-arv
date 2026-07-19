@@ -18,6 +18,7 @@ const FIXTURES = [
   '$45', '45 km/h', '15cm', '16th', '−10 m', 'B', '20', 'equilateral',
   '18 and 27', '9 and −9', '3n + 2 and 32', '$15 and $25',
   'P = 16 cm, A = 16 cm²', '10 factors, not prime', '30 km/h; 3 h 20 min',
+  'mode 7, range 5', 'mean 6, median 6', 'mode', 'median',
 ];
 
 test('format-hint.mjs and quiz-engine.js\'s copy agree on every fixture', () => {
