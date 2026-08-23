@@ -11,6 +11,13 @@
 // added to css/styles.css for this: `.def-list` (a clean bulleted definition list) and
 // `.rw-examples`/`.rw-card` (a grid of real-world scenario cards, tinted like the existing
 // `.hf-sec.realworld` section so the "this is a real example" cue is visually consistent).
+//
+// The five Geometry-strand topics (angles, shapes, transformations, pythagoras, circles) live in
+// geometry-lessons.mjs instead — they were rewritten with sub-headings, numbered methods and inline
+// explainer diagrams, which made them too big to sit comfortably in here. They are spread into
+// LESSON_EXPANSIONS below, so consumers see one combined map exactly as before.
+
+import { GEOMETRY_LESSONS } from './geometry-lessons.mjs';
 
 // A small pie-chart SVG, reused for any topic where "slices of a whole" is the clearest visual
 // (ratios, fractions, percentages, probability, circles all lean on the same picture).
@@ -51,22 +58,9 @@ export function cuboidNetSVG(l, w, h) {
   return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${Math.min(totalW, 210)}" role="img" aria-label="Net of a ${l} by ${w} by ${h} cuboid unfolded into six faces">${g}</svg>`;
 }
 
-// Slice a circle into thin wedges and lay them in a zigzag strip — the classic argument for why
-// A = πr²: the strip approximates a rectangle of height r and width half the circumference (πr).
-export function wedgeRearrangeSVG() {
-  const W = 168, H = 64, n = 8, b = W / n;
-  let g = '';
-  for (let i = 0; i < n; i++) {
-    const x0 = i * b, x1 = (i + 1) * b, xm = x0 + b / 2, up = i % 2 === 0;
-    const pts = up ? `${x0},${H} ${x1},${H} ${xm},0` : `${x0},0 ${x1},0 ${xm},${H}`;
-    g += `<polygon points="${pts}" fill="${up ? '#E4572E' : '#FCE7B8'}" stroke="#fff" stroke-width="1"/>`;
-  }
-  g += `<text x="${W / 2}" y="${H + 16}" text-anchor="middle" font-family="Space Mono" font-size="10" fill="#5A6178">width &asymp; half the circumference (&pi;r)</text>`;
-  g += `<text x="${W / 2}" y="${H + 29}" text-anchor="middle" font-family="Space Mono" font-size="10" fill="#5A6178">height &asymp; r &nbsp;&rarr;&nbsp; area &asymp; &pi;r &times; r = &pi;r&sup2;</text>`;
-  return `<svg viewBox="0 -4 ${W} ${H + 38}" width="${W}" role="img" aria-label="A circle sliced into wedges and rearranged into a zigzag strip that approximates a rectangle">${g}</svg>`;
-}
-
 export const LESSON_EXPANSIONS = {
+
+  ...GEOMETRY_LESSONS,
 
   conversions: `
 <p>The metric system runs on <span class="hl">powers of ten</span>: prefixes like kilo-, centi- and milli- just slide the decimal point.</p>
@@ -147,84 +141,6 @@ export const LESSON_EXPANSIONS = {
   <div class="rw-card">
     <span class="rw-tag">&#129689; Tossing two coins</span>
     <p>It's tempting to guess 3 outcomes (0, 1 or 2 heads). The true sample space has 4: HH, HT, TH, TT &mdash; so "exactly one head" is 2&frasl;4 = <b>1&frasl;2</b>, not 1&frasl;3.</p>
-  </div>
-</div>`,
-
-  transformations: `
-<p>Translations, reflections and rotations are <span class="term">rigid motions</span>: they slide, flip or turn a shape while keeping every length and angle the same, so the image is <span class="hl">congruent</span> to the original.</p>
-<ul class="def-list">
-  <li><span class="term">Enlargement</span> is different &mdash; it resizes a shape from a centre point by a scale factor k, producing a shape that is <span class="term">similar</span> (same angles, proportional sides) but not the same size. For example, a triangle enlarged by scale factor 2 keeps its angles but every side is twice as long.</li>
-  <li>An enlargement multiplies every length by the scale factor k. For example, scale factor 3 turns a 2 cm side into 6 cm.</li>
-  <li>Area does <em>not</em> scale by k &mdash; it scales by <span class="hl">k&sup2;</span>. For example, scale factor 3 turns an area of 5 cm&sup2; into 5 &times; 3&sup2; = <span class="hl">45 cm&sup2;</span>, not 15.</li>
-  <li>Double every side of a shape (scale factor 2) and its area becomes <b>4 times</b> bigger (2&sup2;), not 2 times. For example, a 3 &times; 3 square (area 9) enlarges to 6 &times; 6 with area 36 &mdash; four times as much.</li>
-  <li>By convention, if a question does not say which way to rotate, mathematicians rotate <span class="term">anticlockwise</span> &mdash; the same direction as turning a clock's hands backwards. For example, "rotate 90&deg;" with no direction stated means 90&deg; anticlockwise.</li>
-</ul>
-<div class="kbox"><span class="kbox-tag">Enlargement</span><span class="formula">lengths &times; k &rarr; shape is SIMILAR<br>area &times; k&sup2;</span></div>
-<div class="rw-examples">
-  <div class="rw-card">
-    <span class="rw-tag">&#127918; Video game characters</span>
-    <p>A game character flips to face left instead of right &mdash; a <b>reflection</b>. It slides across the screen &mdash; a <b>translation</b>. Its size never changes in either move, only its position or facing direction.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#128424;&#65039; Enlarging on a photocopier</span>
-    <p>A photocopier enlarges a photo by 150% (scale factor 1.5). Every length grows by 1.5&times;, but the paper's area grows by 1.5&sup2; = <b>2.25&times;</b>, not 1.5&times;.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#129513; Wallpaper patterns</span>
-    <p>A repeating wallpaper pattern is built entirely from translations &mdash; sliding the same motif sideways and down, no resizing or flipping needed, to tile the whole wall.</p>
-  </div>
-</div>`,
-
-  pythagoras: `
-<p>In a <span class="hl">right-angled</span> triangle, the side opposite the right angle &mdash; the longest side &mdash; is the <span class="term">hypotenuse</span>.</p>
-<ul class="def-list">
-  <li><span class="term">Pythagoras' theorem</span>: a&sup2; + b&sup2; = c&sup2;, where c is the hypotenuse and a, b are the two shorter sides.</li>
-  <li>The <span class="term">converse</span> also works: if a&sup2; + b&sup2; = c&sup2; is true for a triangle's three sides, that triangle must have a right angle &mdash; the theorem can <em>test</em> a triangle, not just measure one.</li>
-  <li>Whole-number sets like <span class="hl teal">3-4-5</span> and 5-12-13 satisfy the rule exactly and are worth recognising instantly.</li>
-  <li>The rule only works for right-angled triangles, and c must always be the longest side, opposite the right angle. For example, in a 3-4-5 triangle the hypotenuse is 5, and 3&sup2; + 4&sup2; = 5&sup2;.</li>
-  <li>When an answer is not a whole number, keep the full decimal through every step and round only at the very end &mdash; rounding in the middle can shift the final answer. For example, &radic;20 &asymp; 4.472 &mdash; carry those decimals and round to 4.5 only at the final line.</li>
-</ul>
-<div class="kbox"><span class="kbox-tag">Theorem &amp; converse</span><span class="formula">a&sup2; + b&sup2; = c&sup2;<br>and if a&sup2;+b&sup2;=c&sup2;, the angle IS right</span></div>
-<div class="rw-examples">
-  <div class="rw-card">
-    <span class="rw-tag">&#129692; Setting up a ladder</span>
-    <p>A 5 m ladder leans against a wall with its base 3 m from the wall. It reaches &radic;(5&sup2; &minus; 3&sup2;) = <b>4 m</b> up the wall &mdash; a 3-4-5 triangle.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#128250; A TV's screen size</span>
-    <p>A TV advertised as "55 inches" means the <em>diagonal</em> of the screen (the hypotenuse) is 55 inches &mdash; not its width or height, which form the two shorter sides.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#128208; Checking a corner is square</span>
-    <p>Builders mark 3 m along one wall and 4 m along the other from a corner. If the diagonal between those marks measures exactly <b>5 m</b>, the corner is a true right angle.</p>
-  </div>
-</div>`,
-
-  circles: `
-<p>A circle is the set of all points a fixed distance &mdash; the <span class="term">radius</span> &mdash; from a centre point. The <span class="term">diameter</span> is twice the radius.</p>
-<ul class="def-list">
-  <li><span class="hl">&pi;</span> (pi) is the ratio of a circle's circumference to its diameter &mdash; about 3.14 &mdash; and this ratio is exactly the same for every circle, no matter its size.</li>
-  <li><span class="term">Circumference</span> (distance around) = &pi;d = 2&pi;r. For example, a circle of radius 5 cm: C = 2 &times; 3.14 &times; 5 = <span class="hl">31.4 cm</span>.</li>
-  <li><span class="term">Area</span> (space inside) = &pi;r&sup2; &mdash; always check whether a problem gives the radius or the diameter before substituting. For example, the same 5 cm-radius circle: A = 3.14 &times; 5&sup2; = <span class="hl">78.5 cm&sup2;</span>.</li>
-</ul>
-<div class="kbox"><span class="kbox-tag">Formulas</span><span class="formula">C = &pi;d = 2&pi;r<br>A = &pi;r&sup2;</span></div>
-<div class="rw-examples">
-  <div class="rw-card">
-    <span class="rw-tag">&#128692; A bike wheel</span>
-    <p>A bike wheel has a 66 cm diameter. Every full turn rolls the bike forward one circumference: &pi; &times; 66 &asymp; <b>207 cm</b>, just over 2 metres per turn.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#127829; Comparing pizza deals</span>
-    <p>A small pizza (20 cm across) costs $10; a large (30 cm across) costs $18. Area scales with r&sup2;, so the large has (15&divide;10)&sup2; = <b>2.25&times;</b> the area for only 1.8&times; the price &mdash; better value.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#127939; A running track's lanes</span>
-    <p>A 400 m track's lanes are curved. Runners in outer lanes start further forward, because a bigger radius means a bigger circumference (C = 2&pi;r) to cover the same number of laps fairly.</p>
-  </div>
-  <div class="rw-card">
-    ${wedgeRearrangeSVG()}
-    <span class="rw-tag">&#129921; Why A = &pi;r&sup2;?</span>
-    <p>Slice a circle into thin wedges and lay them out alternating point-up, point-down. The zigzag strip is roughly a rectangle: height r, width half the circumference (&pi;r) &mdash; area = &pi;r &times; r = &pi;r&sup2;.</p>
   </div>
 </div>`,
 
@@ -358,56 +274,6 @@ export const LESSON_EXPANSIONS = {
   <div class="rw-card">
     <span class="rw-tag">&#128506;&#65039; A treasure map</span>
     <p>A map marks treasure at (4, 3) &mdash; 4 steps east, then 3 steps north from the corner. Every map, game and GPS app is really a coordinate plane in disguise.</p>
-  </div>
-</div>`,
-
-  angles: `
-<p>An angle measures the amount of <span class="hl">rotation</span> (turn) between two rays, in degrees.</p>
-<ul class="def-list">
-  <li>Two angles are <span class="term">complementary</span> if they add to 90&deg;; they are <span class="term">supplementary</span> if they add to 180&deg;. For example, 35&deg; and 55&deg; are complementary; 35&deg; and 145&deg; are supplementary.</li>
-  <li>Angles on a straight line always add to 180&deg;; angles all the way around a point always add to 360&deg;. For example, if one angle on a straight line is 120&deg;, the other is 180 &minus; 120 = <span class="hl">60&deg;</span>.</li>
-  <li>The angles inside any triangle always add to 180&deg;. For example, a triangle with angles 90&deg; and 60&deg; has a third angle of 180 &minus; 90 &minus; 60 = <span class="hl">30&deg;</span>.</li>
-  <li>When a line crosses a pair of parallel lines: corresponding ("F") angles are equal, alternate ("Z") angles are equal, and co-interior ("C") angles add to 180&deg;. For example, if one angle is 70&deg;, its corresponding and alternate angles are also 70&deg;, while the co-interior angle is 180 &minus; 70 = 110&deg;.</li>
-  <li>An angle's size depends only on how much it has turned &mdash; not on how long its two arms are drawn. A tiny angle with long arms and a big angle with short arms can look confusingly similar; always check the gap between the arms, not their length. For example, a 30&deg; angle is 30&deg; whether its arms are drawn 1 cm or 10 cm long.</li>
-</ul>
-<div class="kbox"><span class="kbox-tag">Key facts</span><span class="formula">straight line = 180&deg;<br>point = 360&deg;<br>triangle = 180&deg;<br>vertical angles equal</span></div>
-<div class="rw-examples">
-  <div class="rw-card">
-    <span class="rw-tag">&#129466; A skate ramp</span>
-    <p>A ramp meets flat ground at 25&deg;. Since angles on a straight line add to 180&deg;, the angle on the other side is 180&deg; &minus; 25&deg; = <b>155&deg;</b>.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#127968; A roof's pitch</span>
-    <p>A symmetric roof's two slopes meet at 110&deg; at the peak. Each slope meets the flat ceiling at (180&deg; &minus; 110&deg;) &divide; 2 = <b>35&deg;</b>, using the triangle angle-sum rule.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#129517; A ship's bearing</span>
-    <p>A <span class="term">bearing</span> is an angle measured clockwise from north, always written as 3 digits (e.g. 060&deg;). A ship sails on a bearing of 60&deg;, then turns to a bearing of 150&deg; &mdash; a turn of 150&deg; &minus; 60&deg; = <b>90&deg;</b>, a quarter-turn clockwise.</p>
-  </div>
-</div>`,
-
-  shapes: `
-<p>Triangles are named by their sides (equilateral: all equal; isosceles: two equal; scalene: none equal) or by having a right angle.</p>
-<ul class="def-list">
-  <li>Quadrilaterals form a <span class="hl">nested family</span>: a square is a special rectangle, which is a special parallelogram &mdash; a special case keeps all of its parent shape's properties. For example, a square with side 4 cm is still a rectangle (opposite sides equal, four right angles) and still a rhombus (all four sides equal).</li>
-  <li>The interior angles of any polygon add up to <span class="term">(n &minus; 2) &times; 180&deg;</span>, where n is the number of sides. For example, a hexagon (n = 6) totals (6 &minus; 2) &times; 180&deg; = <span class="hl">720&deg;</span>.</li>
-  <li>This works because any polygon can be split into (n &minus; 2) triangles from one corner, and each triangle carries 180&deg;. For example, a pentagon (5 sides) splits into 3 triangles &rarr; 3 &times; 180&deg; = <span class="hl">540&deg;</span>.</li>
-  <li>In a <span class="term">regular</span> polygon every side and angle is equal, so each interior angle is the total divided by n. For example, a regular hexagon totals (6 &minus; 2) &times; 180&deg; = 720&deg;, so each angle is 720 &divide; 6 = <span class="hl">120&deg;</span>.</li>
-  <li>At every corner, the interior and exterior angles sit on a straight line: interior + exterior = 180&deg;. So the exterior-angle shortcut (360&deg; &divide; n) and the interior formula always agree &mdash; they're two routes to the same answer. For example, a regular octagon: interior = 135&deg; via (8&minus;2)&times;180&deg;&divide;8, and exterior = 360&deg;&divide;8 = 45&deg;; check: 135 + 45 = 180. &#10003;</li>
-</ul>
-<div class="kbox"><span class="kbox-tag">Angle sums</span><span class="formula">interior = (n &minus; 2) &times; 180&deg;<br>exterior angles always total 360&deg;</span></div>
-<div class="rw-examples">
-  <div class="rw-card">
-    <span class="rw-tag">&#128721; A stop sign</span>
-    <p>A stop sign is a regular octagon (8 sides). Interior angles total (8&minus;2)&times;180&deg; = 1080&deg;, so each angle is 1080&deg; &divide; 8 = <b>135&deg;</b>.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#128029; A honeycomb</span>
-    <p>Bees build honeycomb from regular hexagons because a hexagon's 120&deg; angles let them tile a flat surface with no gaps &mdash; only triangles, squares and hexagons can do this alone.</p>
-  </div>
-  <div class="rw-card">
-    <span class="rw-tag">&#127959;&#65039; A roof truss</span>
-    <p>A triangular roof truss stays rigid, while a plain quadrilateral frame can collapse sideways &mdash; triangles keep a fixed shape, which is why builders brace structures with them.</p>
   </div>
 </div>`,
 
