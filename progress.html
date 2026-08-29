@@ -12,18 +12,19 @@
 <script>window.SITE_ROOT='';</script>
 </head>
 <body>
+<a class="skiplink" href="#main">Skip to content</a>
 <div class="wrap">
   <header class="topbar">
     <a class="brandmark" href="index.html">
       <div class="glyph">&#8721;</div>
-      <div><h1>The Maths Notebook</h1><p>Years 6 &ndash; 8 &middot; NZ</p></div>
+      <div><span class="bm-title">The Maths Notebook</span><p>Years 6 &ndash; 8 &middot; NZ</p></div>
     </a>
     <nav class="topnav" id="nav"></nav>
     <button class="navtoggle" id="navtoggle" aria-label="Open menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
   </header>
-  <main class="main">
+  <main class="main" id="main" tabindex="-1">
     <div class="inner">
       <h1 style="font-family:'Bricolage Grotesque';font-size:28px;margin:0 0 4px">Your Progress</h1>
       <p class="hero p" style="margin-bottom:6px">Reading progress and practice history, saved only on this device.</p>
@@ -44,21 +45,46 @@
         <div class="bar"><div class="fill" id="fill"></div></div>
       </div>
 
-      <h3 style="font-family:'Bricolage Grotesque';margin:24px 0 8px">Badges</h3>
+      <h2 style="font-family:'Bricolage Grotesque';font-size:19px;margin:24px 0 8px">Badges</h2>
       <div class="badge-grid" id="badge-grid"></div>
 
-      <h3 style="font-family:'Bricolage Grotesque';margin:24px 0 8px">Bookmarked Chapters</h3>
+      <h2 style="font-family:'Bricolage Grotesque';font-size:19px;margin:24px 0 8px">Bookmarked Chapters</h2>
       <div class="toc-grid" id="bookmark-grid"></div>
       <p class="muted" id="bookmark-empty" style="color:var(--ink-soft);display:none">No bookmarks yet &mdash; use the &#9734; button on any chapter page.</p>
     </div>
   </main>
 </div>
 <script src="js/toc-data.js"></script>
+<script src="js/toc-art.js"></script>
 <script src="js/progress-store.js"></script>
 <script src="js/nav.js"></script>
 <script>
 (function () {
   var PS = window.ProgressStore;
+
+  // Chapter names and ideas carry real maths ("Place Value & Whole Numbers", "an inequality
+  // (>, <, >=)"), so every value below goes through this before reaching innerHTML.
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // A bookmarked chapter uses the identical card anatomy to the Table of Contents — same cover
+  // art, same accent, same done state — so the two grids read as one set. The art and the five
+  // --c-* custom properties come from js/toc-art.js, generated alongside the contents cards; the
+  // number badge becomes the bookmark star, which is what distinguishes this grid.
+  function tocCard(t) {
+    var art = (window.TOPIC_ART || {})[t.id] || { vars: "", blurb: t.idea || "", svg: "" };
+    var done = PS.topicAnsweredCount(t.id) >= PS.QUESTIONS_PER_TOPIC;
+    return '<a class="toc-card' + (done ? ' done' : '') + '" href="topics/' + t.id + '.html" style="' + art.vars + '">'
+      + '<span class="toc-art">' + art.svg + '<span class="toc-num" title="Bookmarked">&#9733;</span></span>'
+      + '<span class="toc-body">'
+      + '<span class="toc-name">' + esc(t.name) + '</span>'
+      + '<span class="toc-idea">' + esc(art.blurb) + '</span>'
+      + '<span class="toc-foot"><span class="toc-year">' + esc(t.year) + '</span>'
+      + '<span class="toc-status">Done <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>'
+      + '<span class="toc-go" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>'
+      + '</span></span></a>';
+  }
 
   function render() {
     var stats = PS.globalStats();
@@ -80,12 +106,10 @@
     }).join('');
 
     var ids = PS.bookmarkedIds();
-    var allTopics = (window.TOC_STRANDS || []).flatMap(function (g) { return g.topics.map(function (t) { return Object.assign({}, t, { color: g.color }); }); });
+    var allTopics = (window.TOC_STRANDS || []).flatMap(function (g) { return g.topics; });
     var bookmarked = allTopics.filter(function (t) { return ids.indexOf(t.id) !== -1; });
     document.getElementById('bookmark-empty').style.display = bookmarked.length ? 'none' : 'block';
-    document.getElementById('bookmark-grid').innerHTML = bookmarked.map(function (t) {
-      return '<a class="toc-card" href="topics/' + t.id + '.html"><span class="toc-num">&#9733;</span><span><span class="toc-name">' + t.name + '</span><br><span class="toc-year">' + t.year + '</span></span></a>';
-    }).join('');
+    document.getElementById('bookmark-grid').innerHTML = bookmarked.map(tocCard).join('');
   }
   render();
 

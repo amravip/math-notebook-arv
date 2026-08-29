@@ -19,7 +19,9 @@
       xp: 0,
       streak: { count: 0, lastActiveDay: null },
       badges: [],
-      gym: {}            // practice-book area -> { attempts, correct, best }
+      gym: {},           // practice-book area -> { attempts, correct, best }
+      flags: {},         // "topicId|kind|id" -> true — small per-chapter UI state, e.g. reflection ticks
+      marks: {}          // topicId -> id of the furthest section reached, for "resume where you left off"
     };
   }
 
@@ -37,6 +39,8 @@
       state.streak = state.streak || { count: 0, lastActiveDay: null };
       state.badges = state.badges || [];
       state.gym = state.gym || {};
+      state.flags = state.flags || {};
+      state.marks = state.marks || {};
     } catch (err) {
       console.warn('Progress could not be read, starting fresh.', err);
       state = defaultState();
@@ -112,6 +116,26 @@
   }
   function reseed(topicId) { load(); state.seeds[topicId] = (Math.random() * 2147483647) | 0; save(); return state.seeds[topicId]; }
 
+  // Generic tiny-state store for per-chapter UI the learner expects to survive a reload but that is
+  // not an answer — currently the reflection checklist. Keyed "topicId|kind|id".
+  function getFlag(key) { load(); return !!state.flags[key]; }
+  function setFlag(key, on) {
+    load();
+    if (on) state.flags[key] = true; else delete state.flags[key];
+    save();
+    return on;
+  }
+
+  // Furthest section reached in a chapter. A chapter is ~9000px of scrolling, so returning to the
+  // very top every visit makes picking up where you left off a chore.
+  function getMark(topicId) { load(); return state.marks[topicId] || null; }
+  function setMark(topicId, section) {
+    load();
+    if (state.marks[topicId] === section) return;
+    if (section) state.marks[topicId] = section; else delete state.marks[topicId];
+    save();
+  }
+
   function toggleBookmark(topicId) {
     load();
     if (state.bookmarks[topicId]) delete state.bookmarks[topicId]; else state.bookmarks[topicId] = true;
@@ -152,6 +176,7 @@
     recordAnswer: recordAnswer, clearAllAnswers: clearAllAnswers,
     getSeed: getSeed, reseed: reseed,
     toggleBookmark: toggleBookmark, isBookmarked: isBookmarked, bookmarkedIds: bookmarkedIds,
+    getFlag: getFlag, setFlag: setFlag, getMark: getMark, setMark: setMark,
     topicAnsweredCount: topicAnsweredCount, globalStats: globalStats,
     addXp: addXp, markDailyActive: markDailyActive, checkBadges: checkBadges,
     BADGES: BADGES, QUESTIONS_PER_TOPIC: QUESTIONS_PER_TOPIC, TOTAL_QUESTIONS: TOTAL_QUESTIONS

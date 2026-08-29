@@ -184,12 +184,82 @@
     if (verdict === 'wrong') { ex.classList.add('open'); rev.innerHTML = '▾ Hide solution'; }
   }
 
+  // The Easy/Medium/Hard tabs used to show a fixed "10" — the number of questions in the level, not
+  // how many you had done. With 30 questions spread over three tabs that left no way to see where
+  // you were up to without scrolling each one, so the count is now live progress.
+  function updateLevelTabs() {
+    document.querySelectorAll('.tabs .tab[data-lv]').forEach(function (tab) {
+      var pane = document.querySelector('.pane[data-lv="' + tab.dataset.lv + '"]');
+      if (!pane) return;
+      var items = pane.querySelectorAll('.ex');
+      var done = 0;
+      Array.prototype.forEach.call(items, function (ex) { if (ex.classList.contains('attempted')) done++; });
+      var counter = tab.querySelector('.n');
+      if (counter) counter.textContent = done + '/' + items.length;
+      tab.classList.toggle('done', items.length > 0 && done === items.length);
+    });
+  }
+
+  // ---- per-level score line + "review mistakes" -------------------------------------------------
+  // Re-attempting the questions you got wrong is the highest-yield thing a learner can do here, but
+  // finding them meant scrolling all ten. This summarises the open level and can filter it down to
+  // just the wrong ones. Built in JS (not the generator) so the dynamically rendered chapters get it
+  // too, and injected once, after the tab row.
+  function ensureScoreBar(tabsEl) {
+    var bar = tabsEl.parentNode.querySelector('.score-bar');
+    if (bar) return bar;
+    bar = document.createElement('div');
+    bar.className = 'score-bar';
+    bar.innerHTML = '<span class="score-text"></span>'
+      + '<button class="score-review" type="button" hidden>Review mistakes</button>';
+    tabsEl.parentNode.insertBefore(bar, tabsEl.nextSibling);
+    bar.querySelector('.score-review').addEventListener('click', function () {
+      var pane = document.querySelector('.pane.on');
+      if (!pane) return;
+      var only = pane.classList.toggle('only-wrong');
+      this.classList.toggle('on', only);
+      this.textContent = only ? 'Show all questions' : 'Review mistakes';
+    });
+    return bar;
+  }
+
+  function updateScoreBar() {
+    var tabsEl = document.querySelector('.hf-sec.practice .tabs');
+    var pane = document.querySelector('.pane.on');
+    if (!tabsEl || !pane) return;
+    var bar = ensureScoreBar(tabsEl);
+    var items = pane.querySelectorAll('.ex');
+    var done = 0, right = 0, wrong = 0;
+    Array.prototype.forEach.call(items, function (ex) {
+      if (!ex.classList.contains('attempted')) return;
+      done++;
+      if (ex.classList.contains('correct')) right++;
+      else if (ex.classList.contains('wrong')) wrong++;
+    });
+    var txt = bar.querySelector('.score-text');
+    txt.textContent = done === 0
+      ? 'Nothing answered in this level yet.'
+      : done + ' of ' + items.length + ' answered · ' + right + ' right'
+        + (wrong ? ' · ' + wrong + ' to review' : '');
+    txt.classList.toggle('clean', done > 0 && wrong === 0);
+
+    var btn = bar.querySelector('.score-review');
+    btn.hidden = wrong === 0;
+    if (wrong === 0 && pane.classList.contains('only-wrong')) {
+      pane.classList.remove('only-wrong');
+      btn.classList.remove('on');
+      btn.textContent = 'Review mistakes';
+    }
+  }
+
   function updateChapterProgress() {
     var n = PS.topicAnsweredCount(topicId);
     document.querySelectorAll('.topic-prog[data-tid="' + topicId + '"]').forEach(function (p) {
       p.textContent = n + ' / ' + PS.QUESTIONS_PER_TOPIC;
       p.classList.toggle('full', n >= PS.QUESTIONS_PER_TOPIC);
     });
+    updateLevelTabs();
+    updateScoreBar();
   }
 
   function restoreAnswers() {
@@ -215,8 +285,197 @@
     updateChapterProgress();
   }
 
+  // ---- sticky chapter navigator ----------------------------------------------------------------
+  // Keeps the roadmap pinned under the topbar, marks the section currently on screen, and fills a
+  // rail with reading progress. Without this a 17-section chapter gives no sense of place at all.
+  function initChapterNav() {
+    var nav = document.querySelector('.hf-roadmap');
+    if (!nav) return;
+    var track = nav.querySelector('.hf-roadmap-track');
+    var railFill = nav.querySelector('.hf-roadmap-rail span');
+    var chips = Array.prototype.slice.call(nav.querySelectorAll('.hf-jump'));
+    var topbar = document.querySelector('.topbar');
+
+    // The topbar wraps at narrow widths, so its height drives the sticky offset rather than a
+    // constant. ResizeObserver catches the wrap; the load listener catches late webfont metrics.
+    function measure() {
+      if (!topbar) return;
+      document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
+    }
+    measure();
+    window.addEventListener('load', measure);
+    if (window.ResizeObserver) new ResizeObserver(measure).observe(topbar || document.body);
+    else window.addEventListener('resize', measure);
+
+    var sections = chips.map(function (c) {
+      return document.querySelector('[data-section="' + c.dataset.target + '"]');
+    });
+
+    function setActive(i) {
+      chips.forEach(function (c, j) { c.classList.toggle('on', i === j); });
+      var chip = chips[i];
+      if (!chip || !track) return;
+      // Keep the active chip visible in the horizontally scrolling strip without scrolling the page
+      // (scrollIntoView would do both).
+      var cLeft = chip.offsetLeft, cRight = cLeft + chip.offsetWidth;
+      if (cLeft < track.scrollLeft + 8) track.scrollLeft = cLeft - 8;
+      else if (cRight > track.scrollLeft + track.clientWidth - 8) track.scrollLeft = cRight - track.clientWidth + 8;
+    }
+
+    function onScroll() {
+      var navBottom = nav.getBoundingClientRect().bottom;
+      nav.classList.toggle('stuck', nav.getBoundingClientRect().top <= (parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--topbar-h')) || 64));
+
+      // Active = the last section whose top has reached the probe line. The line sits well below the
+      // navigator (not flush with it) because .hf-sec's scroll-margin-top lands a jumped-to section
+      // ~70px clear of the bar — with a flush line the section you just jumped to would not yet
+      // count and the chip for the PREVIOUS section stayed lit. Before the first section reaches the
+      // line, fall back to the first chip so the navigator is never showing nothing.
+      var probe = navBottom + 100;
+      var best = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i] && sections[i].getBoundingClientRect().top <= probe) best = i;
+      }
+      setActive(best);
+
+      if (railFill) {
+        var topic = document.querySelector('.topic');
+        if (topic) {
+          var r = topic.getBoundingClientRect();
+          var scrolled = navBottom - r.top;
+          var span = r.height - window.innerHeight * 0.5;
+          var pct = span > 0 ? Math.max(0, Math.min(1, scrolled / span)) : 1;
+          railFill.style.width = (pct * 100).toFixed(1) + '%';
+        }
+      }
+    }
+
+    var ticking = false;
+    function schedule() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; onScroll(); });
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    onScroll();
+    initResume(chips, sections);
+  }
+
+  // ---- resume where you left off ---------------------------------------------------------------
+  // Records the FURTHEST section reached (not the last), so a reader who scrolls back up to re-read
+  // something is still offered the point they had actually worked to.
+  function initResume(chips, sections) {
+    var deepest = 0;
+    var saved = PS.getMark(topicId);
+    var savedIdx = -1;
+    chips.forEach(function (c, i) { if (c.dataset.target === saved) savedIdx = i; });
+
+    // Offer the jump only if they got meaningfully in, and only while still near the top — landing
+    // mid-chapter and being told to jump somewhere else would be disorienting.
+    if (savedIdx > 1 && window.scrollY < 200) {
+      var actions = document.querySelector('.topic-head-actions');
+      if (actions) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'resume-btn';
+        btn.innerHTML = '&#8617; Resume at ' + chips[savedIdx].textContent.trim();
+        btn.addEventListener('click', function () {
+          chips[savedIdx].click();
+          btn.remove();
+        });
+        actions.insertBefore(btn, actions.firstChild);
+      }
+    }
+
+    window.addEventListener('scroll', function () {
+      var navBottom = document.querySelector('.hf-roadmap').getBoundingClientRect().bottom;
+      for (var i = sections.length - 1; i >= 0; i--) {
+        if (sections[i] && sections[i].getBoundingClientRect().top <= navBottom + 100) {
+          if (i > deepest) { deepest = i; PS.setMark(topicId, chips[i].dataset.target); }
+          break;
+        }
+      }
+    }, { passive: true });
+  }
+
+  // ---- reflection checklist -----------------------------------------------------------------
+  // Presented as a self-assessment the learner returns to, so it has to survive a reload like every
+  // other piece of progress. Keyed by position within the list, which is stable for a given chapter.
+  function initReflect() {
+    var boxes = document.querySelectorAll('.hf-check input[type="checkbox"]');
+    Array.prototype.forEach.call(boxes, function (box, i) {
+      var key = topicId + '|reflect|' + i;
+      box.checked = PS.getFlag(key);
+      box.closest('li').classList.toggle('done', box.checked);
+      box.addEventListener('change', function () {
+        PS.setFlag(key, box.checked);
+        box.closest('li').classList.toggle('done', box.checked);
+      });
+    });
+  }
+
+  // Re-fold whatever the reader folded last visit (see the .hf-tag click handler).
+  function restoreFolds() {
+    document.querySelectorAll('.hf-sec[data-section]').forEach(function (sec) {
+      if (!PS.getFlag(topicId + '|fold|' + sec.dataset.section)) return;
+      sec.classList.add('collapsed');
+      var btn = sec.querySelector('.hf-tag');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  // ---- vocabulary self-test ---------------------------------------------------------------------
+  // Definitions stay visible by default (this is a reference section first). The toggle flips the
+  // list into recall practice: definitions hide, and each term reveals its own on click.
+  function initVocab() {
+    var btn = document.querySelector('.vocab-test');
+    var dl = document.querySelector('.hf-vocab');
+    if (!btn || !dl) return;
+    var rows = Array.prototype.slice.call(dl.querySelectorAll('.vrow'));
+    function reveal(row) {
+      var shown = row.classList.toggle('shown');
+      row.setAttribute('aria-expanded', String(shown));
+    }
+    btn.addEventListener('click', function () {
+      var testing = dl.classList.toggle('testing');
+      btn.classList.toggle('on', testing);
+      btn.textContent = testing ? 'Show all definitions' : 'Hide definitions & test me';
+      rows.forEach(function (r) {
+        r.classList.remove('shown');
+        // Only a row that actually hides something is a control; outside test mode it is plain text
+        // again, so the button semantics and tab stop are removed rather than left dangling.
+        if (testing) {
+          r.setAttribute('role', 'button');
+          r.setAttribute('tabindex', '0');
+          r.setAttribute('aria-expanded', 'false');
+        } else {
+          r.removeAttribute('role');
+          r.removeAttribute('tabindex');
+          r.removeAttribute('aria-expanded');
+        }
+      });
+    });
+    dl.addEventListener('click', function (e) {
+      if (!dl.classList.contains('testing')) return;
+      var row = e.target.closest('.vrow');
+      if (row) reveal(row);
+    });
+    dl.addEventListener('keydown', function (e) {
+      if (!dl.classList.contains('testing')) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var row = e.target.closest('.vrow');
+      if (row) { e.preventDefault(); reveal(row); }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     restoreAnswers();
+    initChapterNav();
+    restoreFolds();
+    initReflect();
+    initVocab();
 
     // Revise mode is a global toggle (set on the Progress page); apply it here too.
     if (localStorage.getItem('mathsNotebook.reviseMode') === '1') document.body.classList.add('revise');
@@ -236,7 +495,15 @@
       var jump = e.target.closest('.hf-jump');
       if (jump) {
         var target = document.querySelector('[data-section="' + jump.dataset.target + '"]');
-        if (target) { target.classList.remove('collapsed'); target.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+        if (target) {
+          // Jumping to a folded section unfolds it; clear the saved fold too, or it would snap shut
+          // again on the next visit despite the reader having just asked to see it.
+          target.classList.remove('collapsed');
+          var tBtn = target.querySelector('.hf-tag');
+          if (tBtn) tBtn.setAttribute('aria-expanded', 'true');
+          if (target.dataset.section) PS.setFlag(topicId + '|fold|' + target.dataset.section, false);
+          target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
         return;
       }
       var hfr = e.target.closest('.hf-reveal');
@@ -246,14 +513,28 @@
         return;
       }
       var secTag = e.target.closest('.hf-tag');
-      if (secTag) { var sec = secTag.closest('.hf-sec'); if (sec) sec.classList.toggle('collapsed'); return; }
+      if (secTag) {
+        var sec = secTag.closest('.hf-sec');
+        if (sec) {
+          var isCollapsed = sec.classList.toggle('collapsed');
+          secTag.setAttribute('aria-expanded', String(!isCollapsed));
+          // Remembered per chapter: a reader who folds away the sections they have finished expects
+          // them to stay folded when they come back, not to re-open on every visit.
+          if (sec.dataset.section) PS.setFlag(topicId + '|fold|' + sec.dataset.section, isCollapsed);
+        }
+        return;
+      }
 
       var tab = e.target.closest('.tab');
       if (tab) {
         var wrap = tab.closest('.hf-sec') || document;
         wrap.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('on'); });
         tab.classList.add('on');
-        wrap.querySelectorAll('.pane').forEach(function (p) { p.classList.toggle('on', p.dataset.lv === tab.dataset.lv); });
+        wrap.querySelectorAll('.pane').forEach(function (p) {
+          p.classList.toggle('on', p.dataset.lv === tab.dataset.lv);
+          p.classList.remove('only-wrong'); // a filter set on one level should not follow you to another
+        });
+        updateScoreBar();
         return;
       }
 

@@ -653,7 +653,7 @@
 
   function partHtml(title, items, type) {
     type = type || 'ol';
-    return items ? '<div class="assignment-part"><h4>' + title + '</h4><' + type + '>' + items + '</' + type + '></div>' : '';
+    return items ? '<div class="assignment-part"><h3 class="asg-h">' + title + '</h3><' + type + '>' + items + '</' + type + '></div>' : '';
   }
   function assignmentItems(items, start, count) { return (items || []).slice(start, start + count).map(function (e) { return '<li>' + e.q + '</li>'; }).join(''); }
 

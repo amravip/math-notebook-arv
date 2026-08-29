@@ -18,6 +18,11 @@
     return '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" role="img" aria-label="' + label + '">' + inner + '</svg>';
   }
   function cap(t) { return '<div class="ex-cap">' + t + '</div>'; }
+  // Stacked-fraction markup, matching what tools/generate-book.mjs emits, so widget captions pick up
+  // the same .frac styling as the rest of the chapter instead of a flat "3/4".
+  function frac(n, d) {
+    return '<span class="frac"><span class="n">' + n + '</span><span class="d">' + d + '</span></span>';
+  }
   function note(t) { return '<div class="ex-note">' + t + '</div>'; }
   var INK = '#20263F', SOFT = '#5A6178', BRAND = '#3B4CA8', TINT = '#C7D0F2', MARI = '#FFC24B',
     MARI_BG = '#FCE7B8', GOOD = '#238B62', GOOD_BG = '#CDEBD9', BAD = '#C93F4C';
@@ -35,6 +40,17 @@
   // One mystery sequence per page load, so the patterns widget can also rehearse the harder
   // direction — inferring a rule FROM terms, not just generating terms from a rule.
   var patTarget = { d: 2 + Math.floor(Math.random() * 6), c: 1 + Math.floor(Math.random() * 7) };
+
+  // Metric rungs for the conversions widget, ordered largest unit first. `per` is how many of that
+  // unit make one metre, so a metre value converts with a single multiply.
+  var CONV_UNITS = [
+    { name: 'km', per: 0.001 }, { name: 'm', per: 1 },
+    { name: 'cm', per: 100 }, { name: 'mm', per: 1000 }
+  ];
+  // Whole numbers get thousands separators; kilometres keep up to 3 decimals without trailing zeros.
+  function convNum(x) {
+    return (Math.round(x * 1000) / 1000).toLocaleString('en-NZ', { maximumFractionDigits: 3 });
+  }
 
   /* ---------- the 24 specs ---------- */
   var EXPLORES = {
@@ -88,18 +104,44 @@
       ]
     },
 
+    // Two bars, not one. Equivalence and comparison are both claims about how two fractions relate,
+    // and a single bar can only ever show one of them at a time — the learner has to remember the
+    // previous picture. Side by side, at the same total width, "equivalent" becomes something you
+    // can see (the shaded edges line up) rather than something you are told.
     fractions: {
-      kind: 'slider', intro: 'Change the parts and see the fraction, the picture and the decimal move together.',
+      kind: 'slider', intro: 'Two bars, one whole each. Make them equivalent, then compare them &mdash; watch where the shaded edges land.',
       sliders: [
-        { id: 'n', label: 'Numerator', min: 0, max: 12, step: 1, val: 3 },
-        { id: 'd', label: 'Denominator', min: 2, max: 12, step: 1, val: 4 }
+        { id: 'n1', label: 'Top A', min: 0, max: 12, step: 1, val: 3 },
+        { id: 'd1', label: 'Bottom A', min: 2, max: 12, step: 1, val: 4 },
+        { id: 'n2', label: 'Top B', min: 0, max: 12, step: 1, val: 2 },
+        { id: 'd2', label: 'Bottom B', min: 2, max: 12, step: 1, val: 3 }
       ],
       render: function (v) {
-        var n = Math.min(v.n, v.d), d = v.d, g = gcd(n, d);
-        var simp = (n > 0 && g > 1) ? ' = ' + (n / g) + '&frasl;' + (d / g) + ' simplified' : '';
-        return svg(302, 42, cellRow(d, n, 300, 38, MARI, '#fff'), n + ' of ' + d + ' parts shaded') +
-          cap(n + '&frasl;' + d + ' = ' + (n / d).toFixed(2) + simp) +
-          note('Double both numbers — the picture&rsquo;s shading never changes. That is equivalence.');
+        var W = 300, BH = 30;
+        var a = { n: Math.min(v.n1, v.d1), d: v.d1 }, b = { n: Math.min(v.n2, v.d2), d: v.d2 };
+        a.val = a.n / a.d; b.val = b.n / b.d;
+
+        function bar(f, y, colOn) {
+          var g = '<g transform="translate(0,' + y + ')">' + cellRow(f.d, f.n, W, BH, colOn, '#fff') + '</g>';
+          // A dashed drop-line at the shaded edge turns "which is bigger" into a direct read-off.
+          var x = f.val * W;
+          g += '<line x1="' + x + '" y1="' + (y - 4) + '" x2="' + x + '" y2="' + (y + BH + 4) + '" stroke="' + INK + '" stroke-width="1.5" stroke-dasharray="3 2.5"/>';
+          return g;
+        }
+        var g = txt(0, 12, 'A', 'start', 12, SOFT, true) + bar(a, 18, MARI)
+          + txt(0, 76, 'B', 'start', 12, SOFT, true) + bar(b, 82, TINT);
+
+        var same = Math.abs(a.val - b.val) < 1e-9;
+        var verdict = same
+          ? (a.d === b.d && a.n === b.n ? 'the same fraction' : 'equivalent &mdash; the shaded edges line up')
+          : (a.val > b.val ? 'A is bigger' : 'B is bigger');
+        var ga = gcd(a.n, a.d), simp = (a.n > 0 && ga > 1) ? ' (simplifies to ' + frac(a.n / ga, a.d / ga) + ')' : '';
+
+        return svg(W + 2, 124, g, 'Two fraction bars compared at the same width') +
+          cap(frac(a.n, a.d) + ' = ' + a.val.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + simp
+            + ' &nbsp;&middot;&nbsp; ' + frac(b.n, b.d) + ' = ' + b.val.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')
+            + ' &nbsp;&rarr;&nbsp; <b>' + verdict + '</b>') +
+          note('Scale a fraction&rsquo;s top and bottom by the same number &mdash; try 1/2 against 2/4, then 3/6 &mdash; and the bar splits into more pieces but the shaded edge does not move. Different numbers, same amount.');
       }
     },
 
@@ -247,7 +289,7 @@
     inequalities: {
       kind: 'slider', intro: 'Change the sign and the test value: watch the solution region and the boundary circle respond.',
       sliders: [
-        { id: 'sym', label: 'Sign', min: 0, max: 3, step: 1, val: 0, fmt: function (i) { return ['&lt;', '&le;', '&gt;', '&ge;'][i]; } },
+        { id: 'sym', label: 'Sign', min: 0, max: 3, step: 1, val: 0, fmt: function (i) { return ['<', '≤', '>', '≥'][i]; } },
         { id: 'x', label: 'Test x =', min: -5, max: 10, step: 1, val: 3 }
       ],
       render: function (v) {
@@ -338,7 +380,7 @@
       sliders: [
         { id: 'x', label: 'Point x', min: -5, max: 5, step: 1, val: 3 },
         { id: 'y', label: 'Point y', min: -5, max: 5, step: 1, val: 2 },
-        { id: 'tf', label: 'Transformation', min: 0, max: 4, step: 1, val: 0, fmt: function (i) { return ['reflect x-axis', 'reflect y-axis', 'rotate 180&deg;', 'rotate 90&deg; cw', 'rotate 90&deg; ccw'][i]; } }
+        { id: 'tf', label: 'Transformation', min: 0, max: 4, step: 1, val: 0, fmt: function (i) { return ['reflect x-axis', 'reflect y-axis', 'rotate 180°', 'rotate 90° cw', 'rotate 90° ccw'][i]; } }
       ],
       render: function (v) {
         var names = ['reflect in the x-axis', 'reflect in the y-axis', 'rotate 180&deg;', 'rotate 90&deg; clockwise', 'rotate 90&deg; anticlockwise'];
@@ -430,13 +472,45 @@
       }
     },
 
+    // The whole idea of unit conversion is that the QUANTITY is fixed and only the unit (and so the
+    // count) changes. The bar below is therefore drawn at a constant width no matter which unit is
+    // selected — the number beside it moves by powers of ten while the length visibly does not.
     conversions: {
-      kind: 'slider', intro: 'One length, four unit costumes. Smaller unit &rarr; bigger number.',
-      sliders: [{ id: 'm', label: 'Metres', min: 0, max: 2000, step: 50, val: 750 }],
+      kind: 'slider', intro: 'One real length, four unit costumes. Drag the second slider to read the <em>same</em> bar in a different unit.',
+      sliders: [
+        { id: 'm', label: 'Length in metres', min: 0, max: 2000, step: 50, val: 750 },
+        { id: 'u', label: 'Read it as', min: 1, max: 4, step: 1, val: 2, fmt: function (x) { return CONV_UNITS[x - 1].name; } }
+      ],
       render: function (v) {
-        return '<div class="ex-num">' + v.m.toLocaleString('en-NZ') + ' m</div>' +
-          cap('= ' + (v.m / 1000) + ' km &nbsp;=&nbsp; ' + (v.m * 100).toLocaleString('en-NZ') + ' cm &nbsp;=&nbsp; ' + (v.m * 1000).toLocaleString('en-NZ') + ' mm') +
-          note('The length never changed — only its name. Notice every step is a clean power of ten.');
+        var sel = CONV_UNITS[v.u - 1];
+        var bx0 = 16, bx1 = 284, by = 26, bh = 17;
+        var g = txt(150, 17, 'the same real length, whichever unit you use', 'middle', 9.5, SOFT);
+        g += '<rect x="' + bx0 + '" y="' + by + '" width="' + (bx1 - bx0) + '" height="' + bh + '" rx="4" fill="' + TINT + '" stroke="' + BRAND + '" stroke-width="1.5"/>';
+        // End-stops make it obvious the bar is pinned to the same two points every time.
+        g += '<line x1="' + bx0 + '" y1="' + (by - 5) + '" x2="' + bx0 + '" y2="' + (by + bh + 5) + '" stroke="' + BRAND + '" stroke-width="1.5"/>';
+        g += '<line x1="' + bx1 + '" y1="' + (by - 5) + '" x2="' + bx1 + '" y2="' + (by + bh + 5) + '" stroke="' + BRAND + '" stroke-width="1.5"/>';
+
+        var y0 = 74, gap = 31;
+        // The selected row's highlight is painted before any rung text, otherwise it covers the
+        // "x1000" label belonging to the rung above it. It also stops short of the arrow column.
+        var selY = y0 + (v.u - 1) * gap;
+        g += '<rect x="10" y="' + (selY - 16) + '" width="205" height="25" rx="7" fill="' + MARI_BG + '" stroke="' + MARI + '"/>';
+        CONV_UNITS.forEach(function (u, i) {
+          var y = y0 + i * gap, on = (i === v.u - 1);
+          g += txt(46, y, u.name, 'end', 13, on ? INK : SOFT, true);
+          g += txt(172, y, convNum(v.m * u.per), 'end', 13.5, on ? INK : SOFT, true);
+          g += txt(178, y, u.name, 'start', 10.5, SOFT);
+          // Each rung is a clean power of ten away from the next. The factor is rounded because
+          // `per` holds 0.001 for km, and 1/0.001 is 1000.0000000000001 in binary floating point.
+          if (i < CONV_UNITS.length - 1) {
+            g += '<path d="M228 ' + (y + 4) + ' V' + (y + gap - 9) + '" stroke="' + SOFT + '" stroke-width="1"/>';
+            g += '<path d="M225 ' + (y + gap - 13) + ' l3 4 l3 -4" fill="none" stroke="' + SOFT + '" stroke-width="1"/>';
+            g += txt(236, y + gap / 2 + 1, '&#215;' + Math.round(CONV_UNITS[i + 1].per / u.per), 'start', 9.5, SOFT);
+          }
+        });
+        return svg(300, y0 + 3 * gap + 18, g, 'The same length labelled in kilometres, metres, centimetres and millimetres') +
+          '<div class="ex-num">' + convNum(v.m * sel.per) + ' ' + sel.name + '</div>' +
+          note('The bar never moved &mdash; only its name and its count did. Every rung is one clean power of ten, so converting is only ever shifting the digits.');
       }
     },
 
@@ -499,6 +573,9 @@
     });
     function update() {
       var v = {};
+      // NOTE: this is a textContent sink, so a spec's fmt() must return PLAIN TEXT — write '≤' and
+      // '°', never '&le;'/'&deg;', or the entity shows up verbatim in the slider label. (Entities are
+      // still correct inside render(), which goes through innerHTML.)
       Object.keys(inputs).forEach(function (k) { var raw = Number(inputs[k].input.value); v[k] = raw; inputs[k].val.textContent = inputs[k].fmt ? inputs[k].fmt(raw) : inputs[k].input.value; });
       canvas.innerHTML = spec.render(v);
     }
@@ -531,7 +608,7 @@
 
     spec.buckets.forEach(function (label, bi) {
       var bucket = el('div', 'sort-bucket');
-      bucket.innerHTML = '<h5>' + label + '</h5>';
+      bucket.innerHTML = '<h3>' + label + '</h3>';
       var drop = el('div', 'drop');
       bucket.appendChild(drop);
       bucket.addEventListener('click', function (e) {

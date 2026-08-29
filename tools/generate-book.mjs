@@ -19,6 +19,7 @@ import { LESSON_EXPANSIONS } from './lesson-content.mjs';
 import { NOTICE_WONDER, GO_FURTHER, MENTAL_TIPS, CPA_PANELS } from './enrichment-content.mjs';
 import { formatHint } from './format-hint.mjs';
 import { deriveTileSpec } from './tile-spec.mjs';
+import { topicArt, cardVars, lighten, darken } from './topic-art.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, '_source', 'original-single-page.html');
@@ -693,18 +694,19 @@ function pageShell({ title, active, bodyHtml, root, extraScripts }) {
 <script>window.SITE_ROOT=${JSON.stringify(root)};${active ? `window.CURRENT_TOPIC_ID=${JSON.stringify(active)};` : ''}</script>
 </head>
 <body>
+<a class="skiplink" href="#main">Skip to content</a>
 <div class="wrap">
   <header class="topbar">
     <a class="brandmark" href="${root}index.html">
       <div class="glyph">&#8721;</div>
-      <div><h1>The Maths Notebook</h1><p>Years 6 &ndash; 8 &middot; NZ</p></div>
+      <div><span class="bm-title">The Maths Notebook</span><p>Years 6 &ndash; 8 &middot; NZ</p></div>
     </a>
     <nav class="topnav" id="nav"></nav>
     <button class="navtoggle" id="navtoggle" aria-label="Open menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
   </header>
-  <main class="main">
+  <main class="main" id="main" tabindex="-1">
     <div class="inner">
 ${bodyHtml}
     </div>
@@ -745,35 +747,45 @@ function renderChapterBody(t, group, prev, next) {
   addRoad('assignment', 'Assignment', true);
   addRoad('retrieval', 'Retrieval', c.retrieval);
   addRoad('further', 'Go further', GO_FURTHER[t.id]);
-  const roadmap = road.length ? `<div class="hf-roadmap" aria-label="Chapter sections">${road.join('')}</div>` : '';
+  // The roadmap doubles as the chapter's sticky navigator: it scrolls with the page until it meets
+  // the topbar, then pins there so a reader is never lost inside a 17-section chapter. The rail
+  // fills with reading progress; js/topic-interactions.js highlights the section currently on screen.
+  const roadmap = road.length ? `<nav class="hf-roadmap" aria-label="Chapter sections">
+    <div class="hf-roadmap-track">${road.join('')}</div>
+    <div class="hf-roadmap-rail"><span></span></div>
+  </nav>` : '';
   const visualParts = [intro, model ? `<div class="model">${model}</div>` : ''].filter(Boolean).join('');
 
   const S = [];
   if (c.hook) S.push(`<div class="hf-hook"><span class="hf-spark">&#10022;</span><span>${c.hook}</span></div>`);
   if (roadmap) S.push(roadmap);
-  if (c.goals) S.push(`<section class="hf-sec goals" data-section="goals"><div class="hf-tag">&#127919; By the end you can</div><ul class="hf-goals">${c.goals.map(g => `<li>${g}</li>`).join('')}</ul></section>`);
-  if (c.prereq) S.push(`<section class="hf-sec prereq" data-section="prereq"><div class="hf-tag">&#9989; Before you start</div><ul class="hf-list">${c.prereq.map(p => `<li>${p}</li>`).join('')}</ul></section>`);
+  if (c.goals) S.push(`<section class="hf-sec goals" data-section="goals"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#127919; By the end you can</button></h2><ul class="hf-goals">${c.goals.map(g => `<li>${g}</li>`).join('')}</ul></section>`);
+  if (c.prereq) S.push(`<section class="hf-sec prereq" data-section="prereq"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#9989; Before you start</button></h2><ul class="hf-list">${c.prereq.map(p => `<li>${p}</li>`).join('')}</ul></section>`);
   // Illustrative Mathematics' "Notice and Wonder" warm-up: an open scene with two low-stakes
   // prompts, placed BEFORE the directed Discover prediction so the learner looks before predicting.
   const nw = NOTICE_WONDER[t.id];
-  if (nw) S.push(`<section class="hf-sec wonder" data-section="wonder"><div class="hf-tag">&#128064; Notice &amp; wonder</div><p class="hf-sub">Before any rules: just look. What do you notice? What do you wonder?</p><p class="nw-scene">${nw.scene}</p><button class="hf-reveal">Compare with a mathematician's eye</button><div class="hf-hidden"><div class="nw-grid"><div class="nw-col"><h5>You might notice&hellip;</h5><ul>${nw.notice.map(x => `<li>${x}</li>`).join('')}</ul></div><div class="nw-col"><h5>You might wonder&hellip;</h5><ul>${nw.wonder.map(x => `<li>${x}</li>`).join('')}</ul></div></div><p class="nw-tail">Hold on to those wonderings &mdash; this chapter answers most of them.</p></div></section>`);
-  if (c.discovery) S.push(`<section class="hf-sec discovery" data-section="discovery"><div class="hf-tag">&#128302; Discover &mdash; predict first</div><p>${c.discovery.prompt}</p><button class="hf-reveal">Reveal</button><div class="hf-hidden"><p>${c.discovery.answer}</p></div></section>`);
+  if (nw) S.push(`<section class="hf-sec wonder" data-section="wonder"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128064; Notice &amp; wonder</button></h2><p class="hf-sub">Before any rules: just look. What do you notice? What do you wonder?</p><p class="nw-scene">${nw.scene}</p><button class="hf-reveal">Compare with a mathematician's eye</button><div class="hf-hidden"><div class="nw-grid"><div class="nw-col"><h3 class="nw-h">You might notice&hellip;</h3><ul>${nw.notice.map(x => `<li>${x}</li>`).join('')}</ul></div><div class="nw-col"><h3 class="nw-h">You might wonder&hellip;</h3><ul>${nw.wonder.map(x => `<li>${x}</li>`).join('')}</ul></div></div><p class="nw-tail">Hold on to those wonderings &mdash; this chapter answers most of them.</p></div></section>`);
+  if (c.discovery) S.push(`<section class="hf-sec discovery" data-section="discovery"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128302; Discover &mdash; predict first</button></h2><p>${c.discovery.prompt}</p><button class="hf-reveal">Reveal</button><div class="hf-hidden"><p>${c.discovery.answer}</p></div></section>`);
   // Vocabulary now renders BEFORE the explanation: new terms used in the Lesson prose are defined
   // here first, instead of a strictly-linear reader meeting the word before its formal definition.
-  if (c.vocab) S.push(`<section class="hf-sec vocab" data-section="vocab"><div class="hf-tag">&#128218; Key words</div><dl class="hf-vocab">${c.vocab.map(v => `<div class="vrow"><dt>${v[0]}</dt><dd>${v[1]}</dd></div>`).join('')}</dl></section>`);
+  // Definitions are shown by default (this is a reference list first); the toggle turns it into
+  // recall practice — js/topic-interactions.js hides the definitions and reveals them per term.
+  if (c.vocab) S.push(`<section class="hf-sec vocab" data-section="vocab"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128218; Key words</button></h2>
+    <button class="vocab-test" type="button">Hide definitions &amp; test me</button>
+    <dl class="hf-vocab">${c.vocab.map(v => `<div class="vrow"><dt>${v[0]}</dt><dd>${v[1]}</dd></div>`).join('')}</dl></section>`);
   // Math Mammoth-style explicit mental-calculation strategy, appended to the chapter reading.
   const mmtip = MENTAL_TIPS[t.id] ? `<div class="mmtip"><span class="mtag">&#9889; Mental maths strategy</span>${MENTAL_TIPS[t.id]}</div>` : '';
-  S.push(`<section class="hf-sec explain" data-section="explain"><div class="hf-tag">&#128214; Read the chapter</div><p class="hf-sub">${t.idea}</p><div class="lesson">${lessonHtml}</div>${t.why ? `<div class="why">${t.why}</div>` : ''}${t.watchout ? `<div class="watchout"><span class="wtag">&#9888; Watch out</span>${t.watchout}</div>` : ''}${mmtip}</section>`);
+  S.push(`<section class="hf-sec explain" data-section="explain"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128214; Read the chapter</button></h2><p class="hf-sub">${t.idea}</p><div class="lesson">${lessonHtml}</div>${t.why ? `<div class="why">${t.why}</div>` : ''}${t.watchout ? `<div class="watchout"><span class="wtag">&#9888; Watch out</span>${t.watchout}</div>` : ''}${mmtip}</section>`);
   // Singapore-style Concrete → Pictorial → Abstract strip, for the four classic bar-model topics.
   const cpa = CPA_PANELS[t.id] ? `<div class="cpa-wrap"><div class="cap">Concrete &rarr; Pictorial &rarr; Abstract &mdash; three views of the same idea</div>${CPA_PANELS[t.id]}</div>` : '';
-  if (visualParts || cpa) S.push(`<section class="hf-sec visual" data-section="visual"><div class="hf-tag">&#128202; Visual model</div><p class="hf-sub">Use the diagram before calculating. The visual should make the structure easier to see.</p>${visualParts}${cpa}</section>`);
+  if (visualParts || cpa) S.push(`<section class="hf-sec visual" data-section="visual"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128202; Visual model</button></h2><p class="hf-sub">Use the diagram before calculating. The visual should make the structure easier to see.</p>${visualParts}${cpa}</section>`);
   // GeoGebra/Desmos-style interactive: js/explore.js builds the widget for this topic id at runtime.
-  S.push(`<section class="hf-sec explore" data-section="explore"><div class="hf-tag">&#127899;&#65039; Explore &mdash; play with the maths</div><p class="hf-sub">Predict what will happen first, then drag &mdash; the diagram responds instantly.</p><div id="explore-widget" class="explore-widget"></div></section>`);
+  S.push(`<section class="hf-sec explore" data-section="explore"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#127899;&#65039; Explore &mdash; play with the maths</button></h2><p class="hf-sub">Predict what will happen first, then drag &mdash; the diagram responds instantly.</p><div id="explore-widget" class="explore-widget"></div></section>`);
 
   if (dynamic) {
-    S.push(`<section class="hf-sec worked" data-section="examples"><div class="hf-tag">&#9998; Worked examples across scenarios</div><p class="hf-sub">Read these like a teacher modelling the method: one basic case, one mixed case, and one harder transfer case.</p><div id="dyn-worked">Loading&hellip;</div></section>`);
-    S.push(`<section class="hf-sec practice" data-section="practice"><div class="hf-tag">&#9997;&#65039; Guided and independent practice</div><p class="hf-sub">Work up through Easy &rarr; Medium &rarr; Hard. Type an answer and press Mark; the full solution unlocks after each attempt.</p><div class="tabs" id="dyn-tabs"></div><div id="dyn-panes"></div></section>`);
-    S.push(`<section class="hf-sec assignment" data-section="assignment"><div class="hf-tag">&#128221; Assignment work</div><p class="hf-sub">Do these on paper after the guided practice. They mix fluency, reasoning, application, challenge and reflection question types.</p><div class="assignment-grid" id="dyn-assignment"></div><div class="assignment-part"><h4>Part D - Explain and create</h4><ul><li>Write a short paragraph explaining the main idea of ${t.name} in your own words.</li><li>Create one new ${t.name} question, solve it, and show the checking step.</li><li>Describe one mistake a student might make and how to fix it.</li></ul></div></section>`);
+    S.push(`<section class="hf-sec worked" data-section="examples"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#9998; Worked examples across scenarios</button></h2><p class="hf-sub">Read these like a teacher modelling the method: one basic case, one mixed case, and one harder transfer case.</p><div id="dyn-worked">Loading&hellip;</div></section>`);
+    S.push(`<section class="hf-sec practice" data-section="practice"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#9997;&#65039; Guided and independent practice</button></h2><p class="hf-sub">Work up through Easy &rarr; Medium &rarr; Hard. Type an answer and press Mark; the full solution unlocks after each attempt.</p><div class="tabs" id="dyn-tabs"></div><div id="dyn-panes"></div></section>`);
+    S.push(`<section class="hf-sec assignment" data-section="assignment"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128221; Assignment work</button></h2><p class="hf-sub">Do these on paper after the guided practice. They mix fluency, reasoning, application, challenge and reflection question types.</p><div class="assignment-grid" id="dyn-assignment"></div><div class="assignment-part"><h3 class="asg-h">Part D - Explain and create</h3><ul><li>Write a short paragraph explaining the main idea of ${t.name} in your own words.</li><li>Create one new ${t.name} question, solve it, and show the checking step.</li><li>Describe one mistake a student might make and how to fix it.</li></ul></div></section>`);
   } else {
     const LEVELS = [['Easy', 'easy'], ['Medium', 'medium'], ['Hard', 'hard']];
     const tabs = LEVELS.map(([lbl, key], i) => `<button class="tab ${i === 0 ? 'on' : ''}" data-lv="${lbl}">${lbl}<span class="n">${(t[key] || []).length}</span></button>`).join('');
@@ -831,7 +843,7 @@ function renderChapterBody(t, group, prev, next) {
     }).join('');
     const workedSamples = [['Easy', 'Core skill', (t.easy || [])[0]], ['Medium', 'Mixed method', (t.medium || [])[0]], ['Hard', 'Challenge scenario', (t.hard || [])[0]]].filter(x => x[2]);
     if (workedSamples.length) {
-      S.push(`<section class="hf-sec worked" data-section="examples"><div class="hf-tag">&#9998; Worked examples across scenarios</div>
+      S.push(`<section class="hf-sec worked" data-section="examples"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#9998; Worked examples across scenarios</button></h2>
         <p class="hf-sub">Read these like a teacher modelling the method: one basic case, one mixed case, and one harder transfer case.</p>
         <div class="example-grid">${workedSamples.map(([lv, label, e]) => `<article class="we-card ${lv.toLowerCase()}">
           <div class="we-card-head"><span class="level">${lv}</span><span>${label}</span></div>
@@ -840,10 +852,10 @@ function renderChapterBody(t, group, prev, next) {
           <div class="answer"><span class="tag">Answer</span><span class="val">${e.ans}</span></div>
         </article>`).join('')}</div></section>`);
     }
-    S.push(`<section class="hf-sec practice" data-section="practice"><div class="hf-tag">&#9997;&#65039; Guided and independent practice</div><p class="hf-sub">Work up through Easy &rarr; Medium &rarr; Hard. Type an answer and press Mark; the full solution unlocks after each attempt.</p><div class="tabs">${tabs}</div>${panes}</section>`);
+    S.push(`<section class="hf-sec practice" data-section="practice"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#9997;&#65039; Guided and independent practice</button></h2><p class="hf-sub">Work up through Easy &rarr; Medium &rarr; Hard. Type an answer and press Mark; the full solution unlocks after each attempt.</p><div class="tabs">${tabs}</div>${panes}</section>`);
     const assignmentItems = (items, start, count) => (items || []).slice(start, start + count).map(e => `<li>${e.q}</li>`).join('');
-    const part = (title, items, type = 'ol') => items ? `<div class="assignment-part"><h4>${title}</h4><${type}>${items}</${type}></div>` : '';
-    S.push(`<section class="hf-sec assignment" data-section="assignment"><div class="hf-tag">&#128221; Assignment work</div>
+    const part = (title, items, type = 'ol') => items ? `<div class="assignment-part"><h3 class="asg-h">${title}</h3><${type}>${items}</${type}></div>` : '';
+    S.push(`<section class="hf-sec assignment" data-section="assignment"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128221; Assignment work</button></h2>
       <p class="hf-sub">Do these on paper after the guided practice. They mix fluency, reasoning, application, challenge and reflection question types.</p>
       <div class="assignment-grid">${[
         part('Part A - Fluency', assignmentItems(t.easy, 1, 4)),
@@ -853,14 +865,14 @@ function renderChapterBody(t, group, prev, next) {
       ].join('')}</div></section>`);
   }
 
-  if (c.mistake) S.push(`<section class="hf-sec mistake" data-section="misconception"><div class="hf-tag">&#128373;&#65039; Mistake detective</div><p class="hf-sub">Diagnose the misconception, then reveal the cause and intervention.</p><div class="mis-q">${c.mistake.wrong}</div><button class="hf-reveal">Reveal diagnosis</button><div class="hf-hidden"><div class="mis-grid"><div class="mis-item"><span>Cause</span><p>${c.mistake.error}</p></div><div class="mis-item"><span>Diagnostic question</span><p>What rule or representation would show why this answer cannot be right?</p></div><div class="mis-item"><span>Intervention</span><p>${c.mistake.fix}</p></div></div></div></section>`);
-  if (c.realworld) S.push(`<section class="hf-sec realworld" data-section="realworld"><div class="hf-tag">&#127757; In the real world</div><p>${c.realworld}</p></section>`);
-  if (c.reflect) S.push(`<section class="hf-sec reflect" data-section="reflect"><div class="hf-tag">&#129504; Reflect</div><ul class="hf-check">${c.reflect.map(r => `<li><label><input type="checkbox"> <span>${r}</span></label></li>`).join('')}</ul></section>`);
-  if (c.retrieval) S.push(`<section class="hf-sec retrieval" data-section="retrieval"><div class="hf-tag">&#9889; Quick recall</div><p class="hf-sub">Answer in your head, then reveal.</p><ol class="hf-retr">${c.retrieval.map(qa => `<li><span class="rq">${qa[0]}</span> <button class="hf-reveal mini">Show</button><span class="hf-hidden ra">${qa[1]}</span></li>`).join('')}</ol></section>`);
+  if (c.mistake) S.push(`<section class="hf-sec mistake" data-section="misconception"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128373;&#65039; Mistake detective</button></h2><p class="hf-sub">Diagnose the misconception, then reveal the cause and intervention.</p><div class="mis-q">${c.mistake.wrong}</div><button class="hf-reveal">Reveal diagnosis</button><div class="hf-hidden"><div class="mis-grid"><div class="mis-item"><span>Cause</span><p>${c.mistake.error}</p></div><div class="mis-item"><span>Diagnostic question</span><p>What rule or representation would show why this answer cannot be right?</p></div><div class="mis-item"><span>Intervention</span><p>${c.mistake.fix}</p></div></div></div></section>`);
+  if (c.realworld) S.push(`<section class="hf-sec realworld" data-section="realworld"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#127757; In the real world</button></h2><p>${c.realworld}</p></section>`);
+  if (c.reflect) S.push(`<section class="hf-sec reflect" data-section="reflect"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#129504; Reflect</button></h2><ul class="hf-check">${c.reflect.map(r => `<li><label><input type="checkbox"> <span>${r}</span></label></li>`).join('')}</ul></section>`);
+  if (c.retrieval) S.push(`<section class="hf-sec retrieval" data-section="retrieval"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#9889; Quick recall</button></h2><p class="hf-sub">Answer in your head, then reveal.</p><ol class="hf-retr">${c.retrieval.map(qa => `<li><span class="rq">${qa[0]}</span> <button class="hf-reveal mini">Show</button><span class="hf-hidden ra">${qa[1]}</span></li>`).join('')}</ol></section>`);
   // NRICH-style low-threshold-high-ceiling investigation: everyone can start, no one can finish.
   const gf = GO_FURTHER[t.id];
-  if (gf) S.push(`<section class="hf-sec further" data-section="further"><div class="hf-tag">&#128640; Go further &mdash; open investigation</div><p class="hf-sub">No single right answer here: everyone can start, and nobody can completely finish. Get stuck &mdash; that is the point.</p><p>${gf.prompt}</p><div class="gf-ext"><span class="gf-tag">Raise the ceiling</span>${gf.extension}</div></section>`);
-  if (c.summary) S.push(`<section class="hf-sec summary" data-section="summary"><div class="hf-tag">&#127793; In a nutshell</div><ul class="hf-sum">${c.summary.map(s => `<li>${s}</li>`).join('')}</ul></section>`);
+  if (gf) S.push(`<section class="hf-sec further" data-section="further"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#128640; Go further &mdash; open investigation</button></h2><p class="hf-sub">No single right answer here: everyone can start, and nobody can completely finish. Get stuck &mdash; that is the point.</p><p>${gf.prompt}</p><div class="gf-ext"><span class="gf-tag">Raise the ceiling</span>${gf.extension}</div></section>`);
+  if (c.summary) S.push(`<section class="hf-sec summary" data-section="summary"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#127793; In a nutshell</button></h2><ul class="hf-sum">${c.summary.map(s => `<li>${s}</li>`).join('')}</ul></section>`);
   S.push(`<div class="hf-next">${prev ? `<a class="hf-navlink prev" href="${prev.id}.html"><span class="dir">&larr; Previous</span><span class="nm">${prev.name}</span></a>` : '<span></span>'}${next ? `<a class="hf-navlink next" href="${next.id}.html"><span class="dir">Next &rarr;</span><span class="nm">${next.name}</span></a>` : '<span></span>'}</div>`);
 
   const practiceCount = (t.easy || []).length + (t.medium || []).length + (t.hard || []).length;
@@ -871,12 +883,24 @@ function renderChapterBody(t, group, prev, next) {
     <div class="chapter-stat"><b>Assignment set</b>Fluency, reasoning, application</div>
   </div>`;
 
-  const html = `<section class="topic" id="${t.id}" style="--tcol:${group.color}">
+  // The chapter wears its own topic accent (not the shared strand colour), and repeats the cover
+  // art from the Table of Contents, so the card you clicked and the page you land on are visibly
+  // the same chapter and the nine Number chapters stop looking identical.
+  const { accent, svg: coverSvg } = topicArt(t.id);
+  const tvars = `--tcol:${accent};--tc-tint:${lighten(accent, 0.9)};`
+    + `--tc-tint2:${lighten(accent, 0.975)};--tc-line:${lighten(accent, 0.78)};--tc-deep:${darken(accent, 0.32)}`;
+  const html = `<section class="topic" id="${t.id}" style="${tvars}">
   <div class="topic-head">
-    <span class="topic-strand">${group.strand}</span>
-    <div class="topic-titles"><h3>${t.name}</h3><span class="year">${t.year}</span></div>
-    <span class="topic-prog" data-tid="${t.id}">0 / 30</span>
-    <button class="bookmark-btn" type="button">&#9734; Bookmark this chapter</button>
+    <span class="topic-cover" aria-hidden="true">${coverSvg}</span>
+    <div class="topic-titles">
+      <span class="topic-strand">${group.strand}</span>
+      <h1>${t.name}</h1>
+      <span class="year">${t.year}</span>
+    </div>
+    <div class="topic-head-actions">
+      <span class="topic-prog" data-tid="${t.id}">0 / 30</span>
+      <button class="bookmark-btn" type="button">&#9734; Bookmark this chapter</button>
+    </div>
   </div>
   ${chapterStats}
   ${S.join('\n  ')}
@@ -906,16 +930,53 @@ function renderCoverPage() {
 </div>`;
 }
 
+// Text -> safe HTML. Chapter "big idea" lines contain real maths (`(>, <, >=)`, `a & b`), so they
+// must be escaped before going into card copy or a data- attribute; the old markup only ever put
+// them in an attribute where a stray `<` was harmless.
+const esc = (s) => String(s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+// Chapter ideas are authored as lesson HTML. Stacked-fraction spans must become "3/4" *before* the
+// tags come off, or the strip silently glues the numerator to the denominator ("a fraction like 34").
+function plainIdea(idea) {
+  return idea
+    .replace(/<span class="frac">\s*<span class="n">([^<]*)<\/span>\s*<span class="d">([^<]*)<\/span>\s*<\/span>/g, '$1/$2')
+    .replace(/<[^>]+>/g, '');
+}
+
+// The card's one-line teaser. Chapter ideas are full sentences; the card shows the first one (CSS
+// also line-clamps), which is consistently the "what this chapter is about" statement.
+function cardBlurb(idea) {
+  const text = idea.replace(/\s+/g, ' ').trim();
+  const stop = text.search(/[.!?](\s|$)/);
+  const first = stop === -1 ? text : text.slice(0, stop + 1);
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
+function renderTocCard(t, i) {
+  const { accent, svg } = topicArt(t.id);
+  const vars = cardVars(accent);
+  return `<a class="toc-card" href="topics/${t.id}.html" data-tid="${t.id}" data-search="${esc((t.name + ' ' + t.idea).toLowerCase())}" style="${vars}">
+        <span class="toc-art">${svg}<span class="toc-num">${i + 1}</span></span>
+        <span class="toc-body">
+          <span class="toc-name">${esc(t.name)}</span>
+          <span class="toc-idea">${esc(cardBlurb(t.idea))}</span>
+          <span class="toc-foot">
+            <span class="toc-year">${esc(t.year)}</span>
+            <span class="toc-status">Done <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span class="toc-go" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </span>
+        </span>
+      </a>`;
+}
+
 function renderContentsPage(strands) {
   const groups = strands.map((g) => `<div class="toc-strand" style="--strand:${g.color}">
-    <h3>${g.strand}</h3>
-    <div class="toc-grid">${g.topics.map((t, i) => `<a class="toc-card" href="topics/${t.id}.html" data-tid="${t.id}" data-search="${(t.name + ' ' + t.idea).toLowerCase()}">
-        <span class="toc-num">${i + 1}</span>
-        <span><span class="toc-name">${t.name}</span><br><span class="toc-year">${t.year}</span></span>
-      </a>`).join('')}</div>
+    <h2><span class="toc-strand-name">${esc(g.strand)}</span><span class="toc-strand-count">${g.topics.length} chapter${g.topics.length === 1 ? '' : 's'}</span></h2>
+    <div class="toc-grid">${g.topics.map(renderTocCard).join('')}</div>
   </div>`).join('\n');
   return `<h1 style="font-family:'Bricolage Grotesque';font-size:28px;margin:0 0 4px">Table of Contents</h1>
-<p class="hero p" style="margin-bottom:14px">24 chapters, grouped by strand. A solid number means every question in that chapter has been answered.</p>
+<p class="hero p" style="margin-bottom:14px">24 chapters, grouped by strand. A chapter turns green once every question in it has been answered.</p>
 <div class="toc-search">
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
   <input id="toc-search-input" type="text" placeholder="Search a topic&hellip;" aria-label="Search topics">
@@ -1008,7 +1069,7 @@ function run() {
         finalHtml = finalHtml.replace('</body>', `<script>window.QuizEngine && window.QuizEngine.renderDynamicTopic(${JSON.stringify(t.id)}, ${JSON.stringify(t.approach)}, ${JSON.stringify(t.check)});</script>\n</body>`);
       }
       fs.writeFileSync(path.join(TOPICS_DIR, `${t.id}.html`), finalHtml, 'utf-8');
-      tocGroup.topics.push({ id: t.id, name: t.name, year: t.year, idea: t.idea.replace(/<[^>]+>/g, '') });
+      tocGroup.topics.push({ id: t.id, name: t.name, year: t.year, idea: plainIdea(t.idea) });
       count++;
     }
     tocStrands.push(tocGroup);
@@ -1016,6 +1077,20 @@ function run() {
 
   const tocJs = `/* js/toc-data.js — generated by tools/generate-book.mjs. Do not edit by hand. */\nwindow.TOC_STRANDS = ${JSON.stringify(tocStrands, null, 2)};\n`;
   fs.writeFileSync(path.join(ROOT, 'js', 'toc-data.js'), tocJs, 'utf-8');
+
+  // The same cover art and accent, in a form the pages that build cards at runtime can use.
+  // progress.html renders its bookmarked chapters as .toc-card, and a card without these looks
+  // like an unstyled stub next to the Table of Contents. Kept out of toc-data.js on purpose:
+  // toc-data.js loads on every page, and 24 inline SVGs are dead weight inside a chapter.
+  const artMap = {};
+  tocStrands.forEach((g) => g.topics.forEach((t) => {
+    const { accent, svg } = topicArt(t.id);
+    artMap[t.id] = { vars: cardVars(accent), blurb: cardBlurb(t.idea), svg };
+  }));
+  const artJs = `/* js/toc-art.js — generated by tools/generate-book.mjs. Do not edit by hand. */
+window.TOPIC_ART = ${JSON.stringify(artMap, null, 2)};
+`;
+  fs.writeFileSync(path.join(ROOT, 'js', 'toc-art.js'), artJs, 'utf-8');
 
   fs.writeFileSync(path.join(ROOT, 'index.html'),
     pageShell({ title: 'Cover', root: '', bodyHtml: renderCoverPage() }), 'utf-8');
@@ -1025,7 +1100,7 @@ function run() {
     pageShell({ title: 'About', root: '', bodyHtml: renderAboutPage() }), 'utf-8');
 
   console.log(`Generated ${count} chapter pages into ${TOPICS_DIR}`);
-  console.log(`Wrote js/toc-data.js (${tocStrands.length} strands)`);
+  console.log(`Wrote js/toc-data.js (${tocStrands.length} strands) and js/toc-art.js`);
   console.log('Wrote index.html, contents.html, about.html');
 }
 

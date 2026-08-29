@@ -7,6 +7,12 @@
   --line:#E7E9F1; --shadow:0 1px 2px rgba(32,38,63,.05), 0 8px 24px rgba(32,38,63,.06);
 }
 *{box-sizing:border-box}
+/* Keyboard users land on a ~9000px chapter behind a nav bar; this gives them one keystroke past it.
+   Visible only while focused, per the standard skip-link pattern. */
+.skiplink{position:absolute;left:12px;top:-60px;z-index:60;background:var(--brand);color:#fff;font-weight:800;
+  font-size:13.5px;padding:10px 16px;border-radius:0 0 10px 10px;text-decoration:none;transition:top .15s}
+.skiplink:focus{top:0}
+#main:focus{outline:none}
 html{scroll-behavior:smooth}
 body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);background-color:var(--paper);
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
@@ -15,7 +21,7 @@ body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);backgro
 .brandmark{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit}
 .brandmark .glyph{width:36px;height:36px;border-radius:10px;flex:none;background:var(--brand);color:#fff;
   display:grid;place-items:center;font-family:"Space Mono",monospace;font-weight:700;font-size:18px;box-shadow:var(--shadow);transform:rotate(-4deg)}
-.brandmark h1{font-family:"Bricolage Grotesque";font-size:17px;line-height:1.05;margin:0;font-weight:800;letter-spacing:-.01em}
+.brandmark .bm-title{display:block;font-family:"Bricolage Grotesque";font-size:17px;line-height:1.05;margin:0;font-weight:800;letter-spacing:-.01em}
 .brandmark p{margin:1px 0 0;font-size:10.5px;color:var(--ink-soft);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 
 /* ---- top navigation bar (replaces the old sidebar) ---- */
@@ -57,16 +63,30 @@ body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);backgro
 .btn:hover{border-color:var(--brand);color:var(--brand-deep)}
 .btn.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .btn.warn:hover{border-color:var(--hard);color:var(--hard)}
+/* Chapter header. --tcol/--tc-* are the topic's own accent, set inline by tools/generate-book.mjs
+   from the same palette the Table of Contents cards use. */
 .topic{padding:32px 0}
-.topic-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.topic-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+.topic-cover{flex:none;width:78px;height:78px;border-radius:18px;display:grid;place-items:center;
+  color:var(--tcol,var(--brand));border:1.5px solid var(--tc-line,var(--line));
+  background:linear-gradient(160deg,var(--tc-tint,#fff),var(--tc-tint2,#fff))}
+.topic-cover .toc-art-svg{width:56px;height:38.5px}
 .topic-strand{font-family:"Space Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-  color:#fff;background:var(--tcol,var(--brand));padding:3px 9px;border-radius:6px;margin-top:6px;flex:none}
-.topic-titles{flex:1;min-width:220px}
-.topic h3{font-family:"Bricolage Grotesque";font-weight:800;letter-spacing:-.01em;font-size:24px;margin:0;line-height:1.1}
+  color:var(--tcol,var(--brand));display:block;margin-bottom:3px}
+.topic-titles{flex:1;min-width:200px}
+.topic h1{font-family:"Bricolage Grotesque";font-weight:800;letter-spacing:-.015em;font-size:27px;margin:0;line-height:1.08}
 .topic .year{font-family:"Space Mono",monospace;font-size:12px;color:var(--ink-soft);font-weight:700}
-.topic-prog{font-family:"Space Mono",monospace;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-top:6px;flex:none;
-  display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:var(--brand-tint)}
+.topic-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:none}
+.topic-prog{font-family:"Space Mono",monospace;font-size:11.5px;font-weight:700;flex:none;
+  display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;
+  background:var(--tc-tint,var(--brand-tint));color:var(--tcol,var(--ink-soft))}
 .topic-prog.full{background:var(--easy-bg);color:var(--easy)}
+/* Appears only when a reader returns to a chapter they had already worked into. */
+.resume-btn{font:inherit;font-weight:800;font-size:12.5px;cursor:pointer;border-radius:9px;padding:7px 12px;
+  border:1.5px solid var(--tcol,var(--brand));background:var(--tc-tint,var(--brand-tint));color:var(--tcol,var(--brand-deep));
+  display:inline-flex;align-items:center;gap:6px;flex:none;transition:.12s}
+.resume-btn:hover{background:var(--tcol,var(--brand));color:#fff}
+.resume-btn:focus-visible{outline:2.5px solid var(--tcol,var(--brand));outline-offset:2px}
 .bookmark-btn{font:inherit;font-weight:700;font-size:12.5px;cursor:pointer;border-radius:9px;padding:7px 11px;border:1.5px solid var(--line);
   background:var(--panel);color:var(--ink-soft);display:inline-flex;align-items:center;gap:6px;flex:none}
 .bookmark-btn:hover{border-color:var(--marigold);color:#8a6a12}
@@ -99,7 +119,7 @@ body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);backgro
 .hf-sec.wonder .hf-tag{color:#7C5CBF}
 .nw-scene{font-size:15.5px;line-height:1.6;max-width:70ch}
 .nw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
-.nw-col h5{margin:0 0 6px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#7C5CBF}
+.nw-col .nw-h{margin:0 0 6px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#7C5CBF}
 .nw-col ul{margin:0;padding-left:18px;font-size:14px;line-height:1.55}
 .nw-col li{margin-bottom:4px}
 .nw-tail{font-size:13px;color:var(--ink-soft);margin:10px 0 0}
@@ -137,8 +157,8 @@ body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);backgro
 .sort-card.no{border-color:var(--hard);background:var(--hard-bg)}
 .sort-buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:11px}
 .sort-bucket{border:1.5px dashed #C9B26B;border-radius:12px;padding:10px;min-height:84px;background:var(--panel);cursor:pointer}
-.sort-bucket h5{margin:0 0 8px;font-size:13px;line-height:1.3}
-.sort-bucket h5 small{font-weight:600;color:var(--ink-soft)}
+.sort-bucket h3{margin:0 0 8px;font-size:13px;line-height:1.3}
+.sort-bucket h3 small{font-weight:600;color:var(--ink-soft)}
 .sort-bucket .drop{display:flex;flex-wrap:wrap;gap:6px}
 .sort-actions{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .sort-result{font-weight:800;font-size:13.5px}
@@ -199,7 +219,23 @@ body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);backgro
 .tabs{display:flex;gap:8px;margin:22px 0 0;flex-wrap:wrap}
 .tab{font:inherit;font-weight:800;font-size:13px;cursor:pointer;border-radius:10px;padding:8px 15px;border:1.5px solid var(--line);
   background:var(--panel);color:var(--ink-soft);font-family:"Space Mono",monospace;letter-spacing:.02em;transition:.12s;display:flex;align-items:center;gap:7px}
-.tab .n{font-size:11px;opacity:.7}
+.tab .n{font-size:11px;opacity:.7;font-family:"Space Mono",monospace}
+/* A level with every question attempted gets a tick, so finished levels are visible from the tab
+   row rather than only by opening each one. */
+.tab.done{border-color:var(--easy-line);background:var(--easy-bg);color:var(--easy)}
+.tab.done .n{opacity:1}
+.tab.done::after{content:"\2713";margin-left:6px;font-weight:800;color:var(--easy)}
+.tab:focus-visible{outline:2.5px solid var(--tcol,var(--brand));outline-offset:2px}
+/* Score line under the level tabs, with the filter that hides everything you already got right. */
+.score-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0 4px}
+.score-text{font-family:"Space Mono",monospace;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.score-text.clean{color:var(--easy)}
+.score-review{font:inherit;font-weight:800;font-size:12px;cursor:pointer;padding:5px 11px;border-radius:8px;
+  border:1.5px solid var(--hard-line);background:var(--hard-bg);color:var(--hard);transition:.12s}
+.score-review:hover{background:var(--hard);border-color:var(--hard);color:#fff}
+.score-review.on{background:var(--hard);border-color:var(--hard);color:#fff}
+.score-review:focus-visible{outline:2.5px solid var(--hard);outline-offset:2px}
+.pane.only-wrong .ex:not(.wrong){display:none}
 .tab:hover{border-color:var(--ink-soft)}
 .tab.on[data-lv="Easy"]{background:var(--easy-bg);border-color:var(--easy);color:var(--easy)}
 .tab.on[data-lv="Medium"]{background:var(--medium-bg);border-color:var(--medium);color:var(--medium)}
@@ -240,18 +276,26 @@ body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);backgro
 .steps li{position:relative;padding:3px 0 8px 34px;font-size:14.5px;line-height:1.55}
 .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:2px;width:22px;height:22px;border-radius:7px;
   background:var(--brand-tint);color:var(--brand-deep);font-family:"Space Mono",monospace;font-weight:700;font-size:12px;display:grid;place-items:center}
-.answer{margin-top:6px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--easy-bg);border:1px solid var(--easy-line);font-size:15px;font-weight:800}
+/* margin-top:auto pins the answer to the foot of a worked-example card, so the three cards in a row
+   line their answers up instead of each floating wherever its own steps happen to end. */
+.answer{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--easy-bg);border:1px solid var(--easy-line);font-size:15px;font-weight:800}
 .answer .tag{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--easy);font-weight:700}
 .answer .val{font-family:"Space Mono",monospace;color:var(--ink)}
 .checktip{margin-top:11px;font-size:13.5px;line-height:1.55;color:var(--ink-soft);padding-left:24px;position:relative}
 .checktip::before{content:"\2713";position:absolute;left:0;top:0;color:var(--easy);font-weight:800}
 .checktip b{color:var(--ink)}
 .m{font-family:"Space Mono",monospace;font-weight:700}
-.frac{font-family:"Space Mono",monospace;font-weight:700;white-space:nowrap}
-.frac .n{font-size:.82em;vertical-align:.32em}
-.frac .n::after{content:"\2044"}
-.frac .d{font-size:.82em;vertical-align:-.12em}
-.viz{display:block;max-width:100%;height:auto}
+/* Inline fractions are the book's most-used notation (200+ per chapter), so they are drawn as a
+   real stacked fraction rather than superscript-solidus-subscript, which collapsed into an
+   unreadable smudge at body size. inline-grid keeps numerator over denominator on one baseline;
+   the negative vertical-align drops the bar onto the text's optical midline, and the .78em scale
+   keeps a two-row box inside the paragraph's 1.6 line-height so lines do not spread apart. */
+.frac{display:inline-grid;grid-template-rows:auto auto;justify-items:center;vertical-align:middle;
+  font-family:"Space Mono",monospace;font-weight:700;font-size:.74em;line-height:1.06;
+  white-space:nowrap;margin:0 .1em}
+.frac .n{padding:0 .18em;border-bottom:1.5px solid currentColor}
+.frac .d{padding:0 .18em}
+.viz{display:block;max-width:100%;height:auto;margin-inline:auto}
 .empty{padding:60px 10px;text-align:center;color:var(--ink-soft);font-weight:700;display:none}
 @media(max-width:700px){
   .topbar{flex-wrap:nowrap}
@@ -300,10 +344,9 @@ body.revise .ex.attempted{display:none}
 .stat .ok{color:var(--easy)}.stat .no{color:var(--hard)}
 /* ---- Head First chapter sections ---- */
 .hf-hook{display:flex;gap:11px;align-items:flex-start;margin:16px 0 4px;padding:15px 18px;border-radius:14px;max-width:74ch;
-  background:linear-gradient(100deg,var(--brand) 0%,var(--brand-deep) 100%);color:#fff;font-size:16px;font-weight:700;line-height:1.5;box-shadow:var(--shadow)}
+  background:linear-gradient(100deg,var(--tcol,var(--brand)) 0%,var(--tc-deep,var(--brand-deep)) 100%);color:#fff;font-size:16px;font-weight:700;line-height:1.5;box-shadow:var(--shadow)}
 .hf-hook .hf-spark{font-size:20px;line-height:1.3;flex:none;color:var(--marigold)}
-.hf-sec{margin:18px 0 0;padding:16px 18px;border:1.5px solid var(--line);border-radius:14px;background:var(--panel);max-width:74ch;box-shadow:var(--shadow)}
-.hf-tag{font-family:"Bricolage Grotesque";font-weight:800;font-size:15px;letter-spacing:-.01em;color:var(--ink);margin-bottom:9px}
+.hf-sec{scroll-margin-top:calc(var(--topbar-h,64px) + 78px);margin:18px 0 0;padding:16px 18px;border:1.5px solid var(--line);border-radius:14px;background:var(--panel);max-width:74ch;box-shadow:var(--shadow)}
 .hf-sub{font-size:13.5px;color:var(--ink-soft);font-weight:600;margin:0 0 11px}
 .hf-sec.goals{background:var(--brand-tint);border-color:#DEE2F6}
 .hf-goals,.hf-list,.hf-sum{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:7px}
@@ -320,14 +363,31 @@ body.revise .ex.attempted{display:none}
 .hf-hidden{display:none;margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);font-size:14.5px;line-height:1.6}
 .hf-hidden.show{display:block}
 .hf-hidden p{margin:0 0 8px}.hf-hidden p:last-child{margin-bottom:0}
-.hf-roadmap{max-width:74ch;margin:14px 0 2px;display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}
-.hf-jump{font:inherit;text-align:left;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 10px;cursor:pointer;
-  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;line-height:1.25;transition:.12s}
-.hf-jump:hover,.hf-jump:focus{outline:none;border-color:var(--brand);background:var(--brand-tint);color:var(--brand-deep)}
-.hf-jump .dot{width:9px;height:9px;border-radius:3px;background:var(--tcol,var(--brand));flex:none}
-.chapter-meta{max-width:74ch;margin:12px 0 2px;display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
-.chapter-stat{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 11px;font-size:12.5px;font-weight:800;color:var(--ink-soft);line-height:1.35}
-.chapter-stat b{display:block;font-family:"Space Mono",monospace;color:var(--brand-deep);font-size:14px}
+/* Sticky chapter navigator. --topbar-h is measured at runtime by js/topic-interactions.js, because
+   the topbar wraps to two rows at narrow widths and a hard-coded offset would leave a gap or clip. */
+.hf-roadmap{position:sticky;top:calc(var(--topbar-h,64px) - 1px);z-index:20;margin:16px 0 4px;max-width:74ch;
+  background:var(--panel);border:1.5px solid var(--line);border-radius:13px;box-shadow:var(--shadow)}
+.hf-roadmap.stuck{border-radius:0 0 13px 13px;border-top-color:transparent}
+.hf-roadmap-track{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:7px 8px;scroll-behavior:smooth}
+.hf-roadmap-track::-webkit-scrollbar{display:none}
+.hf-roadmap-rail{height:3px;margin:0 8px 6px;border-radius:99px;background:var(--line);overflow:hidden}
+.hf-roadmap-rail span{display:block;height:100%;width:0;border-radius:99px;background:var(--tcol,var(--brand));transition:width .15s linear}
+.hf-jump{font:inherit;white-space:nowrap;border:1px solid transparent;background:transparent;color:var(--ink-soft);
+  border-radius:9px;padding:7px 11px;cursor:pointer;display:flex;align-items:center;gap:7px;
+  font-size:12.5px;font-weight:800;line-height:1.2;transition:.12s;flex:none}
+.hf-jump:hover,.hf-jump:focus{outline:none;border-color:var(--tc-line,var(--line));background:var(--tc-tint2,var(--brand-tint));color:var(--ink)}
+.hf-jump .dot{width:8px;height:8px;border-radius:3px;background:currentColor;opacity:.35;flex:none;transition:.12s}
+.hf-jump.on{background:var(--tc-tint,var(--brand-tint));color:var(--tcol,var(--brand-deep));border-color:var(--tc-line,var(--line))}
+.hf-jump.on .dot{opacity:1}
+@media(prefers-reduced-motion:reduce){.hf-roadmap-track{scroll-behavior:auto}}
+/* "What's in this chapter" strip. Tinted in the chapter's accent so it reads as part of the header
+   rather than four loose boxes, with the headline figure leading each one. */
+.chapter-meta{max-width:74ch;margin:14px 0 2px;display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}
+.chapter-stat{border:1.5px solid var(--tc-line,var(--line));border-radius:12px;padding:10px 12px;
+  background:linear-gradient(160deg,var(--tc-tint,#fff),var(--tc-tint2,#fff));
+  font-size:12px;font-weight:700;color:var(--ink-soft);line-height:1.4}
+.chapter-stat b{display:block;margin-bottom:1px;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;
+  letter-spacing:-.01em;color:var(--tcol,var(--brand-deep));font-size:14.5px}
 .hf-sec.explain .lesson{margin:8px 0 0;max-width:none}
 .hf-sec.explain .why,.hf-sec.explain .watchout{max-width:none}
 .hf-sec.visual .figwrap,.hf-sec.visual .model{max-width:none}
@@ -341,7 +401,7 @@ body.revise .ex.attempted{display:none}
 .we-card .steps li{font-size:13.5px}
 .assignment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .assignment-part{border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px 13px;min-width:0}
-.assignment-part h4{margin:0 0 8px;font-family:"Bricolage Grotesque";font-size:14px;line-height:1.2}
+.assignment-part .asg-h{margin:0 0 8px;font-family:"Bricolage Grotesque";font-size:14px;line-height:1.2}
 .assignment-part ol,.assignment-part ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px}
 .assignment-part li{font-size:14px;line-height:1.45}
 .mis-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -351,8 +411,19 @@ body.revise .ex.attempted{display:none}
 .hf-vocab{margin:0}
 .hf-vocab .vrow{display:grid;grid-template-columns:minmax(120px,32%) 1fr;gap:6px 16px;padding:8px 0;border-top:1px solid var(--line)}
 .hf-vocab .vrow:first-child{border-top:none}
-.hf-vocab dt{font-family:"Space Mono",monospace;font-weight:700;font-size:13.5px;color:var(--brand-deep)}
+.hf-vocab dt{font-family:"Space Mono",monospace;font-weight:700;font-size:13.5px;color:var(--tcol,var(--brand-deep))}
 .hf-vocab dd{margin:0;font-size:14px;color:var(--ink);line-height:1.5}
+.vocab-test{font:inherit;font-weight:700;font-size:12px;cursor:pointer;margin:0 0 10px;padding:6px 12px;border-radius:9px;
+  border:1.5px solid var(--tc-line,var(--line));background:var(--panel);color:var(--ink-soft);transition:.12s}
+.vocab-test:hover,.vocab-test.on{background:var(--tc-tint,var(--brand-tint));color:var(--tcol,var(--brand-deep));border-color:var(--tcol,var(--brand))}
+/* Self-test mode: each definition collapses behind its term until that row is clicked. */
+.hf-vocab.testing .vrow{cursor:pointer;border-radius:8px;padding:8px 10px;margin:2px 0;border-top:none;background:var(--tc-tint2,var(--paper))}
+.hf-vocab.testing .vrow:hover{background:var(--tc-tint,var(--brand-tint))}
+.hf-vocab.testing dd{visibility:hidden;position:relative}
+.hf-vocab.testing dd::after{content:"tap to reveal";visibility:visible;position:absolute;inset:0;
+  font-size:12.5px;font-weight:700;color:var(--ink-soft);opacity:.65}
+.hf-vocab.testing .vrow.shown dd{visibility:visible}
+.hf-vocab.testing .vrow.shown dd::after{content:none}
 .hf-sec.worked{background:#FCFCFE}
 .hf-sec.worked .we-q{font-size:15.5px;font-weight:700;line-height:1.5;margin-bottom:6px}
 .hf-sec.mistake{background:var(--medium-bg);border-color:var(--medium-line)}
@@ -363,7 +434,12 @@ body.revise .ex.attempted{display:none}
 .hf-sec.realworld .hf-tag{color:var(--easy)}
 .hf-sec.realworld p{margin:0;font-size:14.5px;line-height:1.6}
 .hf-check{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.hf-check label{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.5;cursor:pointer}
+.hf-check li{border:1.5px solid var(--line);border-radius:11px;padding:9px 12px;background:var(--panel);transition:.14s}
+/* Ticks persist via ProgressStore flags, so the checked state has to be visible at a glance. */
+.hf-check li.done{border-color:var(--easy-line);background:var(--easy-bg)}
+.hf-check li.done span{color:var(--easy);text-decoration:line-through;text-decoration-color:var(--easy-line)}
+.hf-check li.done input{accent-color:var(--easy)}
+.hf-check label{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.5;cursor:pointer}
 .hf-check input{margin-top:3px;width:16px;height:16px;accent-color:var(--brand);flex:none}
 .hf-retr{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:9px}
 .hf-retr li{font-size:14.5px;line-height:1.5}
@@ -381,10 +457,17 @@ body.revise .ex.attempted{display:none}
 @media(max-width:860px){.hf-vocab .vrow{grid-template-columns:1fr;gap:2px}.hf-roadmap{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.hf-roadmap{grid-template-columns:1fr}.chapter-meta{grid-template-columns:1fr}}
 /* ---- collapsible sections ---- */
-.hf-tag{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;user-select:none}
+/* Each section title is a real <h2> wrapping a <button> (the WAI-ARIA accordion pattern), so the
+   17 sections of a chapter form a proper document outline AND the fold control is reachable by
+   keyboard. It used to be a plain <div> with a click handler: no outline, no tab stop. */
+.hf-head{margin:0}
+.hf-tag{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+  font:inherit;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em;
+  color:inherit;background:none;border:0;padding:0;margin-bottom:9px;text-align:left;cursor:pointer;user-select:none}
 .hf-tag::after{content:"\25BE";font-size:12px;color:var(--ink-soft);transition:transform .15s;flex:none}
-.hf-tag:hover::after{color:var(--brand)}
-.hf-sec.collapsed>:not(.hf-tag){display:none}
+.hf-tag:hover::after{color:var(--tcol,var(--brand))}
+.hf-tag:focus-visible{outline:2.5px solid var(--tcol,var(--brand));outline-offset:3px;border-radius:6px}
+.hf-sec.collapsed>:not(.hf-head){display:none}
 .hf-sec.collapsed .hf-tag{margin-bottom:0}
 .hf-sec.collapsed .hf-tag::after{transform:rotate(-90deg)}
 
@@ -403,38 +486,86 @@ body.revise .ex.attempted{display:none}
 .cover-links a{color:var(--ink-soft);text-decoration:none;font-weight:700;font-size:13.5px}
 .cover-links a:hover{color:var(--brand)}
 
-/* ---- new: table of contents ---- */
-.toc-strand{margin:0 0 30px}
-.toc-strand h3{font-family:"Space Mono",monospace;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--strand,var(--brand));margin:0 0 12px}
-.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.toc-card{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:14px;background:var(--panel);padding:14px 16px;
-  text-decoration:none;color:var(--ink);transition:.12s;box-shadow:var(--shadow)}
-.toc-card:hover{border-color:var(--brand);background:var(--brand-tint)}
-.toc-num{font-family:"Space Mono",monospace;font-weight:700;font-size:12px;width:26px;height:26px;border-radius:8px;flex:none;
-  display:grid;place-items:center;background:var(--brand-tint);color:var(--brand-deep)}
-.toc-card.done .toc-num{background:var(--easy);color:#fff}
-.toc-name{font-weight:800;font-size:14.5px;line-height:1.3}
-.toc-year{font-family:"Space Mono",monospace;font-size:11px;color:var(--ink-soft);font-weight:700}
+/* ---- table of contents ----
+   Each .toc-card carries its own accent as inline custom properties (--c, --c-bg, --c-tint,
+   --c-tint2, --c-line) written by tools/topic-art.mjs, so every rule below is colour-agnostic and
+   one topic's palette is changed in that generator, never here. */
+.toc-strand{margin:0 0 34px}
+.toc-strand h2{display:flex;align-items:center;gap:12px;font-family:"Space Mono",monospace;font-size:12.5px;
+  font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--strand,var(--brand));margin:0 0 14px}
+.toc-strand h2::before{content:"";width:9px;height:9px;border-radius:3px;background:currentColor;flex:none}
+.toc-strand h2::after{content:"";order:2;flex:1;height:1.5px;border-radius:2px;background:currentColor;opacity:.2}
+.toc-strand-count{order:3;flex:none;font-size:10.5px;letter-spacing:.06em;color:var(--ink-soft)}
 
-/* ---- practice book: area cards ---- */
-.practice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:20px 0}
-.practice-card{border:1.5px solid var(--line);border-radius:16px;background:var(--panel);padding:18px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;gap:12px}
-.practice-card-head{display:flex;align-items:center;gap:12px}
-.area-icon{width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;font-family:"Bricolage Grotesque";font-weight:800;font-size:19px;color:#fff;background:var(--brand)}
-.area-icon.squares{background:var(--medium)}
-.area-icon.mental{background:var(--easy)}
-.practice-card-head h4{margin:0;font-family:"Bricolage Grotesque";font-size:16.5px}
-.practice-card .desc{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.5}
-.accuracy-pill{margin-left:auto;font-family:"Space Mono",monospace;font-size:11.5px;font-weight:700;color:var(--ink-soft);
-  background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:4px 10px;white-space:nowrap;flex:none}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.toc-card{position:relative;display:flex;flex-direction:column;overflow:hidden;text-decoration:none;color:var(--ink);
+  border:1.5px solid var(--c-line,var(--line));border-radius:18px;background:var(--c-bg,var(--panel));box-shadow:var(--shadow);
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.toc-card:hover{transform:translateY(-3px);border-color:var(--c,var(--brand));
+  box-shadow:0 2px 4px rgba(32,38,63,.06),0 16px 30px -10px rgba(32,38,63,.28)}
+.toc-card:focus-visible{outline:3px solid var(--c,var(--brand));outline-offset:2px}
+
+/* Cover art: the topic illustration inherits `color`. The dot grid echoes the paper background and
+   lives on its own ::before purely so it can be faded — `currentColor` inside a gradient cannot. */
+.toc-art{position:relative;display:grid;place-items:center;height:106px;color:var(--c,var(--brand));
+  background:linear-gradient(160deg,var(--c-tint,#fff),var(--c-tint2,#fff));border-bottom:1.5px solid var(--c-line,var(--line))}
+.toc-art::before{content:"";position:absolute;inset:0;opacity:.16;
+  background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:13px 13px;background-position:6px 6px}
+.toc-art-svg{width:102px;height:70px;display:block;position:relative}
+.toc-num{position:absolute;top:10px;left:11px;font-family:"Space Mono",monospace;font-weight:700;font-size:11.5px;
+  min-width:25px;height:25px;padding:0 7px;border-radius:8px;display:grid;place-items:center;
+  background:var(--c,var(--brand));color:#fff;box-shadow:0 2px 6px rgba(32,38,63,.2)}
+
+.toc-body{display:flex;flex-direction:column;gap:5px;flex:1;padding:13px 15px 14px;background:var(--panel)}
+.toc-name{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:15.5px;line-height:1.25;letter-spacing:-.01em}
+.toc-idea{font-size:12.5px;line-height:1.45;color:var(--ink-soft);
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.toc-foot{display:flex;align-items:center;gap:7px;margin-top:auto;padding-top:11px}
+.toc-year{font-family:"Space Mono",monospace;font-size:10.5px;font-weight:700;color:var(--c,var(--brand));
+  background:var(--c-tint,var(--brand-tint));border:1px solid var(--c-line,var(--line));border-radius:99px;padding:3px 9px}
+.toc-status{display:none;align-items:center;gap:4px;font-family:"Space Mono",monospace;font-size:10.5px;font-weight:700;
+  color:#fff;background:var(--easy);border-radius:99px;padding:3px 9px}
+.toc-go{margin-left:auto;display:flex;color:var(--c,var(--brand));opacity:.4;transition:opacity .16s ease,transform .16s ease}
+.toc-card:hover .toc-go{opacity:1;transform:translateX(3px)}
+
+/* Completed chapter: green ring + badge, but the topic's own colour is kept so the grid stays readable. */
+.toc-card.done{border-color:var(--easy-line)}
+.toc-card.done .toc-num{background:var(--easy)}
+.toc-card.done .toc-status{display:inline-flex}
+@media(max-width:520px){.toc-grid{grid-template-columns:1fr;gap:14px}.toc-art{height:94px}}
+@media(prefers-reduced-motion:reduce){.toc-card,.toc-go{transition:none}.toc-card:hover{transform:none}}
+
+/* ---- practice book: area cards ----
+   Same anatomy as the Table of Contents cards (illustrated banner over a white body, per-area accent
+   in --c/--c-bg/--c-tint/--c-tint2/--c-line set inline in practice.html), so the two "pick something
+   to work on" pages read as one system. auto-fit means the three areas sit on one row rather than
+   leaving the third orphaned beside a gap. */
+.practice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px;margin:20px 0}
+.practice-card{display:flex;flex-direction:column;overflow:hidden;text-align:left;
+  border:1.5px solid var(--c-line,var(--line));border-radius:18px;background:var(--c-bg,var(--panel));box-shadow:var(--shadow)}
+.practice-art{position:relative;display:grid;place-items:center;height:104px;color:var(--c,var(--brand));
+  background:linear-gradient(160deg,var(--c-tint,#fff),var(--c-tint2,#fff));border-bottom:1.5px solid var(--c-line,var(--line))}
+.practice-art::before{content:"";position:absolute;inset:0;opacity:.16;
+  background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:13px 13px;background-position:6px 6px}
+.practice-art .toc-art-svg{position:relative;width:100px;height:69px}
+.practice-body{display:flex;flex-direction:column;gap:10px;flex:1;padding:14px 16px 16px;background:var(--panel)}
+.practice-body h2{margin:0;font-family:"Bricolage Grotesque";font-size:16.5px;letter-spacing:-.01em}
+.practice-card .desc{margin:0;font-size:13px;color:var(--ink-soft);line-height:1.5}
+.practice-title{display:flex;align-items:flex-start;gap:10px}
+.practice-title h2{flex:1;min-width:0}
+/* Beside the title rather than on the banner: the artwork is centred, so a corner pill overlapped
+   the illustration on every card. */
+.accuracy-pill{flex:none;margin-top:2px;font-family:"Space Mono",monospace;font-size:10.5px;font-weight:700;color:var(--ink-soft);
+  background:var(--paper);border:1px solid var(--c-line,var(--line));border-radius:99px;padding:4px 9px;white-space:nowrap}
 .accuracy-pill.good{color:var(--easy);border-color:var(--easy-line);background:var(--easy-bg)}
 .accuracy-pill.weak{color:var(--hard);border-color:var(--hard-line);background:var(--hard-bg)}
 .table-pick-row{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--ink-soft)}
 .table-pick-row select{font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink)}
-.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
 .mode-card{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1.5px solid var(--line);
   border-radius:11px;background:var(--panel);padding:9px 11px;cursor:pointer;font:inherit;transition:.12s}
-.mode-card:hover{border-color:var(--brand);background:var(--brand-tint)}
+.mode-card:hover{border-color:var(--c,var(--brand));background:var(--c-tint2,var(--brand-tint))}
+.mode-card:focus-visible{outline:2.5px solid var(--c,var(--brand));outline-offset:2px}
 .mode-card .m-label{font-weight:800;font-size:13px;color:var(--ink)}
 .mode-card .m-cap{font-size:11px;color:var(--ink-soft);font-weight:600;line-height:1.3}
 .mode-card.dodge{border-color:var(--marigold);background:#FFFCF3}
@@ -442,12 +573,17 @@ body.revise .ex.attempted{display:none}
 .mode-card.dodge .m-label{color:var(--brand-deep)}
 
 .smart-practice{margin:26px 0 6px;padding:18px 20px;border-radius:16px;background:var(--brand-tint);border:1px solid #DEE2F6}
-.smart-practice h3{margin:0 0 4px;font-family:"Bricolage Grotesque";font-size:17px}
+.smart-practice h2{margin:0 0 4px;font-family:"Bricolage Grotesque";font-size:17px}
 .smart-practice>p{margin:0 0 14px;font-size:13.5px;color:var(--ink-soft)}
 .smart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.smart-card{background:var(--panel);border:1.5px solid var(--line);border-radius:13px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
-.smart-card h5{margin:0;font-family:"Bricolage Grotesque";font-size:14px}
+.smart-card{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.smart-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;margin-bottom:2px;
+  color:var(--c,var(--brand));background:var(--panel);border:1.5px solid currentColor}
+.smart-icon svg{width:21px;height:21px;display:block}
+.smart-card h3{margin:0;font-family:"Bricolage Grotesque";font-size:15px}
 .smart-card p{margin:0;font-size:12.5px;color:var(--ink-soft);flex:1;line-height:1.5}
+.smart-card .btn{align-self:flex-start;margin-top:2px}
+.smart-card .btn:hover{border-color:var(--c,var(--brand));color:var(--c,var(--brand-deep))}
 
 .mode-row{display:flex;flex-wrap:wrap;gap:8px}
 .pq-stage{position:relative;max-width:520px;margin:20px auto;text-align:center;padding:26px;border:1.5px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
@@ -465,7 +601,7 @@ body.revise .ex.attempted{display:none}
 .pq-timerfill{display:block;height:100%;background:var(--marigold);transition:width .1s linear}
 .pq-summary{text-align:center}
 .pq-score{font-family:"Bricolage Grotesque";font-size:32px;font-weight:800;margin:10px 0}
-@media(max-width:480px){.mode-grid{grid-template-columns:1fr}.practice-card-head{flex-wrap:wrap}.accuracy-pill{margin-left:0}}
+@media(max-width:480px){.mode-grid{grid-template-columns:1fr}}
 
 /* ---- worksheet view: Squares & Tables show every question at once ---- */
 .ws-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
@@ -498,4 +634,4 @@ body.revise .ex.attempted{display:none}
 .badge-chip.earned{border-color:var(--marigold);background:#FFFCF3}
 .badge-chip .ic{font-size:16px}
 
-@media(max-width:860px){.chapter-bar{top:0}}
+@media(max-width:560px){.hf-jump{padding:6px 9px;font-size:12px}.topic-cover{width:62px;height:62px;border-radius:15px}.topic-cover .toc-art-svg{width:44px;height:30px}}

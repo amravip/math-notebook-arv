@@ -26,7 +26,7 @@ window.TOC_STRANDS = [
         "id": "fractions",
         "name": "Fractions",
         "year": "Year 6",
-        "idea": "A fraction like 34 means '3 of 4 equal parts'. Multiplying or dividing top and bottom by the same number gives an equal fraction — how we simplify, compare, add and subtract."
+        "idea": "A fraction like 3/4 means '3 of 4 equal parts'. Multiplying or dividing top and bottom by the same number gives an equal fraction — how we simplify, compare, add and subtract."
       },
       {
         "id": "decimals",
