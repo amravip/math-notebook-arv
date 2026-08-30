@@ -6,6 +6,11 @@
    - card sorts (Desmos Classroom style): click a card, click a bucket, then Check — used for the
      classification topics (order of operations, primes, triangle types).
 
+   Every chapter also carries a short list of CHALLENGES — goals to hit with the widget. A slider
+   widget's goals are checked live against the same values render() sees; a card sort's are
+   checked when Check is pressed, against a summary of where the cards landed. Solving one is
+   remembered and worth a little XP, so a returning reader resumes at the next goal, not the first.
+
    The generator emits an empty #explore-widget on every chapter page; this file looks up
    window.CURRENT_TOPIC_ID and builds the matching widget. If a topic ever has no spec the whole
    section is removed rather than left empty. */
@@ -554,10 +559,345 @@
     }
   };
 
+  /* ---------- challenges ----------
+     The Explore section tells the reader to "predict what will happen first, then drag", but with
+     nothing to aim at there was no prediction to make: 21 of the 24 widgets were drag-and-observe.
+     A challenge gives the sliders a goal, so exploring becomes a puzzle with a win state.
+
+     Each entry is { ask, ok } where ok(v) receives exactly the slider values render() gets. Keep the
+     goals reachable from the slider ranges above, and reachable in more than one way where the maths
+     allows it — the point is to search, not to guess one magic setting. */
+  var CHALLENGES = {
+    /* The three card sorts get goals too, checked when the reader presses Check. Their ok() receives
+       a placement summary rather than slider values:
+         { total, placed, correct, wrong, buckets[], correctIn[] }
+       where buckets[i] counts the cards sitting in bucket i and correctIn[i] how many of those
+       belong there. The second goal in each is deliberately a *partial* sort — fill one group
+       exactly and leave the rest in the tray — because isolating a single category is a sharper test
+       of the classification than shuffling every card into place. */
+    operations: [
+      {
+        ask: 'Put <b>every</b> card into the right group, then press Check.',
+        ok: function (s) { return s.correct === s.total; }
+      },
+      {
+        ask: 'Now clear the board and fill <b>only</b> the &ldquo;Brackets first&rdquo; group &mdash; both bracket cards there, every other card left in the tray.',
+        ok: function (s) { return s.placed === 2 && s.buckets[1] === 2 && s.correctIn[1] === 2; }
+      }
+    ],
+
+    factors: [
+      {
+        ask: 'Sort all eight numbers into Prime or Composite, then press Check.',
+        ok: function (s) { return s.correct === s.total; }
+      },
+      {
+        ask: 'Now clear the board and fill <b>only</b> the Prime group &mdash; all four primes in it, every composite left in the tray.',
+        ok: function (s) { return s.placed === 4 && s.buckets[0] === 4 && s.correctIn[0] === 4; }
+      }
+    ],
+
+    shapes: [
+      {
+        ask: 'Classify all six triangles by their sides, then press Check.',
+        ok: function (s) { return s.correct === s.total; }
+      },
+      {
+        ask: 'Now clear the board and place <b>only</b> the two isosceles triangles in their group, leaving everything else in the tray.',
+        ok: function (s) { return s.placed === 2 && s.buckets[1] === 2 && s.correctIn[1] === 2; }
+      }
+    ],
+
+    'place-value': [
+      {
+        ask: 'Build a number that rounds <b>up</b> to 4,000 when you round to the nearest 1000.',
+        ok: function (v) {
+          var n = 1000 * v.th + 100 * v.h + 10 * v.t + v.o;
+          if (v.rp !== 3) return false;
+          var lower = Math.floor(n / 1000) * 1000;
+          return n < 4000 && (n - lower >= 500 ? lower + 1000 : lower) === 4000;
+        }
+      },
+      {
+        ask: 'Make a number whose four digits add up to exactly <b>25</b>.',
+        ok: function (v) { return v.th + v.h + v.t + v.o === 25; }
+      }
+    ],
+
+    fractions: [
+      {
+        ask: 'Make A and B <b>equivalent</b> &mdash; same amount, different denominators.',
+        ok: function (v) {
+          var a = Math.min(v.n1, v.d1) / v.d1, b = Math.min(v.n2, v.d2) / v.d2;
+          return v.n1 > 0 && v.d1 !== v.d2 && Math.abs(a - b) < 1e-9;
+        }
+      },
+      {
+        ask: 'Make A <b>bigger</b> than B, using a smaller top number on A than on B.',
+        ok: function (v) {
+          var a = Math.min(v.n1, v.d1) / v.d1, b = Math.min(v.n2, v.d2) / v.d2;
+          return a > b && v.n1 < v.n2;
+        }
+      }
+    ],
+
+    decimals: [
+      { ask: 'Shade exactly <b>12</b> of the 100 small squares.', ok: function (v) { return v.a * v.b === 12; } },
+      { ask: 'Make the product bigger than <b>0.5</b>.', ok: function (v) { return v.a * v.b > 50; } }
+    ],
+
+    percentages: [
+      { ask: 'Shade <b>three quarters</b> of the grid.', ok: function (v) { return v.p === 75; } },
+      { ask: 'Find the percentage that equals the fraction <b>2&frasl;5</b>.', ok: function (v) { return v.p === 40; } }
+    ],
+
+    ratios: [
+      {
+        ask: 'Split the bar so the first part is exactly <b>a quarter</b> of the whole.',
+        ok: function (v) { return v.a / (v.a + v.b) === 0.25; }
+      },
+      {
+        ask: 'Make a ratio that <b>simplifies to 1 : 2</b> without already being 1 : 2.',
+        ok: function (v) { var g = gcd(v.a, v.b); return v.a / g === 1 && v.b / g === 2 && g > 1; }
+      }
+    ],
+
+    integers: [
+      {
+        ask: 'Land exactly on <b>0</b> by <b>subtracting a negative</b> number.',
+        ok: function (v) { return v.op === 1 && v.n < 0 && v.s - v.n === 0; }
+      },
+      {
+        ask: 'Start <b>above</b> zero and finish <b>below &minus;5</b>.',
+        ok: function (v) { return v.s > 0 && v.s + (v.op ? -v.n : v.n) < -5; }
+      }
+    ],
+
+    powers: [
+      {
+        ask: 'Make the value exactly <b>1</b> &mdash; then check every base does it the same way.',
+        ok: function (v) { return Math.pow(v.b, v.e) === 1 && v.e === 0; }
+      },
+      { ask: 'Build a power greater than <b>1000</b>.', ok: function (v) { return Math.pow(v.b, v.e) > 1000; } }
+    ],
+
+    patterns: [
+      {
+        ask: 'Match the <b>mystery sequence</b> with your rule.',
+        ok: function (v) { return v.d === patTarget.d && v.c === patTarget.c; }
+      },
+      {
+        ask: 'Build a rule whose <b>10th term is exactly 50</b>.',
+        ok: function (v) { return v.d * 10 + v.c === 50; }
+      }
+    ],
+
+    expressions: [
+      {
+        ask: 'Make the machine output exactly <b>30</b> when the input x is <b>7</b>.',
+        ok: function (v) { return v.x === 7 && v.a * v.x + v.b === 30; }
+      },
+      {
+        ask: 'Set a <b>$0 flagfall</b> and still reach an output of exactly <b>24</b>.',
+        ok: function (v) { return v.b === 0 && v.a * v.x === 24; }
+      }
+    ],
+
+    equations: [
+      { ask: 'Balance the scale &mdash; find the x that solves x + 4 = 10.', ok: function (v) { return v.x + 4 === 10; } },
+      { ask: 'Now make the left pan exactly <b>2 heavier</b> than the right.', ok: function (v) { return v.x + 4 - 10 === 2; } }
+    ],
+
+    inequalities: [
+      {
+        ask: 'Choose a sign that makes the test value <b>x = 7</b> a true solution.',
+        ok: function (v) { return v.x === 7 && (v.sym === 1 || v.sym === 3); }
+      },
+      {
+        ask: 'Shade the region to the <b>left</b>, and pick a test value that comes out <b>false</b>.',
+        ok: function (v) {
+          var lt = v.sym === 0 || v.sym === 1;
+          var ok = v.sym === 0 ? v.x < 7 : v.sym === 1 ? v.x <= 7 : v.sym === 2 ? v.x > 7 : v.x >= 7;
+          return lt && !ok;
+        }
+      }
+    ],
+
+    graphs: [
+      {
+        ask: 'Draw a line that runs <b>downhill</b> and crosses the y-axis <b>below</b> zero.',
+        ok: function (v) { return v.m < 0 && v.c < 0; }
+      },
+      { ask: 'Make a <b>flat</b> line sitting at height 3.', ok: function (v) { return v.m === 0 && v.c === 3; } }
+    ],
+
+    angles: [
+      {
+        ask: 'On the straight line, make the <b>two angles equal</b>.',
+        ok: function (v) { return v.m === 0 && v.a === 90; }
+      },
+      {
+        ask: 'Switch to the parallel lines and make both marked angles <b>acute</b>.',
+        ok: function (v) { return v.m === 1 && v.a < 90; }
+      }
+    ],
+
+    transformations: [
+      {
+        ask: 'Find a point that a <b>reflection in the x-axis leaves exactly where it was</b>.',
+        ok: function (v) { return v.tf === 0 && v.y === 0; }
+      },
+      {
+        ask: 'Use a <b>rotation</b> (not a reflection) to send P to <b>(2, 3)</b>.',
+        ok: function (v) {
+          var nx, ny;
+          switch (v.tf) {
+            case 0: nx = v.x; ny = -v.y; break;
+            case 1: nx = -v.x; ny = v.y; break;
+            case 2: nx = -v.x; ny = -v.y; break;
+            case 3: nx = v.y; ny = -v.x; break;
+            default: nx = -v.y; ny = v.x;
+          }
+          return v.tf >= 2 && nx === 2 && ny === 3;
+        }
+      }
+    ],
+
+    pythagoras: [
+      {
+        ask: 'You start on 3-4-5. Find a <b>different</b> pair of legs that still gives a whole-number hypotenuse.',
+        ok: function (v) {
+          var c = Math.sqrt(v.a * v.a + v.b * v.b);
+          var isThreeFour = Math.min(v.a, v.b) === 3 && Math.max(v.a, v.b) === 4;
+          return !isThreeFour && Math.abs(c - Math.round(c)) < 1e-9;
+        }
+      },
+      {
+        ask: 'Find the pair of legs whose hypotenuse is exactly <b>13</b>.',
+        ok: function (v) { return v.a * v.a + v.b * v.b === 169; }
+      }
+    ],
+
+    circles: [
+      {
+        ask: 'Find the one radius where the <b>area and circumference are the same number</b>.',
+        ok: function (v) { return Math.abs(Math.PI * v.r * v.r - 2 * Math.PI * v.r) < 1e-9; }
+      },
+      { ask: 'Push the circumference past <b>50</b>.', ok: function (v) { return 2 * Math.PI * v.r > 50; } }
+    ],
+
+    'perimeter-area': [
+      {
+        ask: 'Build a rectangle with perimeter <b>16</b> and area <b>12</b>.',
+        ok: function (v) { return 2 * (v.l + v.w) === 16 && v.l * v.w === 12; }
+      },
+      {
+        ask: 'Make an area of exactly <b>24</b> with the <b>smallest possible perimeter</b>.',
+        ok: function (v) { return v.l * v.w === 24 && 2 * (v.l + v.w) === 20; }
+      }
+    ],
+
+    volume: [
+      { ask: 'Build a <b>cube</b> &mdash; every edge the same length.', ok: function (v) { return v.l === v.w && v.w === v.h; } },
+      { ask: 'Make a volume of exactly <b>36</b> cubes.', ok: function (v) { return v.l * v.w * v.h === 36; } }
+    ],
+
+    conversions: [
+      { ask: 'Show a length of <b>1.5 km</b>, read in kilometres.', ok: function (v) { return v.m === 1500 && v.u === 1; } },
+      { ask: 'Read a length as <b>25,000 cm</b>.', ok: function (v) { return v.m === 250 && v.u === 3; } }
+    ],
+
+    statistics: [
+      {
+        ask: 'Drag the fourth value until the <b>mean is exactly double the median</b>.',
+        ok: function (v) { return (8 + v.x) / 4 === 6; }
+      },
+      { ask: 'Make the <b>range</b> exactly 30.', ok: function (v) { return v.x - 2 === 30; } }
+    ],
+
+    probability: [
+      {
+        ask: 'Fill the bag so that P(red) is exactly <b>&frac14;</b>.',
+        ok: function (v) { return v.r + v.b > 0 && v.r / (v.r + v.b) === 0.25; }
+      },
+      {
+        ask: 'Make red and blue <b>equally likely</b>, with more than 6 marbles in the bag.',
+        ok: function (v) { return v.r === v.b && v.r + v.b > 6; }
+      }
+    ]
+  };
+
   /* ---------- runtime ---------- */
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
 
-  function buildSliders(host, spec) {
+
+  // A challenge is solved once, and stays solved: the flag is what lets a returning reader pick up at
+  // the next one instead of re-doing the first. XP is awarded on the same flag, so a challenge cannot
+  // be farmed by wiggling a slider back and forth.
+  function buildChallenge(host, topicId) {
+    var list = CHALLENGES[topicId];
+    if (!list || !list.length) return null;
+    var PS = window.ProgressStore;
+    var key = function (i) { return 'explore|' + topicId + '|' + i; };
+    var done = function (i) { return PS ? PS.getFlag(key(i)) : false; };
+
+    var idx = 0;
+    while (idx < list.length - 1 && done(idx)) idx++;
+
+    var card = el('div', 'ex-challenge');
+    card.innerHTML = '<span class="ex-ch-tag"></span><p class="ex-ch-ask"></p>' +
+      '<p class="ex-ch-status" role="status"></p>' +
+      '<button class="ex-ch-next" type="button" hidden>Next challenge &rarr;</button>';
+    var tag = card.querySelector('.ex-ch-tag');
+    var ask = card.querySelector('.ex-ch-ask');
+    var status = card.querySelector('.ex-ch-status');
+    var next = card.querySelector('.ex-ch-next');
+
+    function show() {
+      var solved = done(idx);
+      tag.innerHTML = '&#127919; Challenge ' + (idx + 1) + ' of ' + list.length;
+      ask.innerHTML = list[idx].ask;
+      card.classList.toggle('solved', solved);
+      status.innerHTML = solved
+        ? '&#10003; Solved earlier &mdash; move the sliders to see it again.'
+        : 'Move the sliders until this is true.';
+      next.hidden = !(solved && idx < list.length - 1);
+      if (solved && idx === list.length - 1) {
+        status.innerHTML = '&#127881; Every challenge in this chapter is solved.';
+      }
+    }
+
+    next.addEventListener('click', function () {
+      if (idx < list.length - 1) { idx++; show(); }
+    });
+
+    host.appendChild(card);
+    show();
+
+    return function check(v) {
+      var was = done(idx);
+      var hit = false;
+      // A broken challenge must never break the widget it sits on.
+      try { hit = !!list[idx].ok(v); } catch (e) { return; }
+      if (!hit) {
+        if (!was) { card.classList.remove('solved'); status.innerHTML = 'Move the sliders until this is true.'; }
+        return;
+      }
+      card.classList.add('solved');
+      status.innerHTML = was
+        ? '&#10003; That works.'
+        : '&#127881; <b>Solved!</b> +3 XP';
+      if (!was && PS) { PS.setFlag(key(idx), true); PS.addXp(3); }
+      next.hidden = idx >= list.length - 1;
+      if (idx >= list.length - 1 && !was) status.innerHTML = '&#127881; <b>Solved!</b> +3 XP &mdash; that was the last one.';
+      card.classList.remove('just-solved');
+      void card.offsetWidth;
+      if (!was) card.classList.add('just-solved');
+    };
+  }
+
+  function buildSliders(host, spec, topicId) {
+    var checkChallenge = buildChallenge(host, topicId);
     var controls = el('div', 'ex-controls');
     var canvas = el('div', 'ex-canvas');
     var inputs = {};
@@ -578,13 +918,15 @@
       // still correct inside render(), which goes through innerHTML.)
       Object.keys(inputs).forEach(function (k) { var raw = Number(inputs[k].input.value); v[k] = raw; inputs[k].val.textContent = inputs[k].fmt ? inputs[k].fmt(raw) : inputs[k].input.value; });
       canvas.innerHTML = spec.render(v);
+      if (checkChallenge) checkChallenge(v);
     }
     Object.keys(inputs).forEach(function (k) { inputs[k].input.addEventListener('input', update); });
     host.appendChild(controls); host.appendChild(canvas);
     update();
   }
 
-  function buildSort(host, spec) {
+  function buildSort(host, spec, topicId) {
+    var checkChallenge = buildChallenge(host, topicId);
     var tray = el('div', 'sort-tray');
     var buckets = el('div', 'sort-buckets');
     var actions = el('div', 'sort-actions');
@@ -624,14 +966,24 @@
     var result = el('span', 'sort-result');
     checkBtn.addEventListener('click', function () {
       var right = 0, placed = 0;
+      var perBucket = spec.buckets.map(function () { return 0; });
+      var rightPerBucket = spec.buckets.map(function () { return 0; });
       buckets.querySelectorAll('.sort-bucket').forEach(function (bucket) {
+        var bi = Number(bucket.dataset.bi);
         bucket.querySelectorAll('.sort-card').forEach(function (card) {
           placed++;
+          perBucket[bi]++;
           var ok = card.dataset.b === bucket.dataset.bi;
           card.classList.toggle('ok', ok); card.classList.toggle('no', !ok);
-          if (ok) right++;
+          if (ok) { right++; rightPerBucket[bi]++; }
         });
       });
+      if (checkChallenge) {
+        checkChallenge({
+          total: spec.cards.length, placed: placed, correct: right, wrong: placed - right,
+          buckets: perBucket, correctIn: rightPerBucket
+        });
+      }
       if (!placed) { result.textContent = 'Sort the cards into groups first — click a card, then a group.'; return; }
       var left = tray.querySelectorAll('.sort-card').length;
       result.innerHTML = right + ' / ' + spec.cards.length + ' correct' + (left ? ' (' + left + ' not sorted yet)' : right === spec.cards.length ? ' — &#127881; perfect!' : ' — click a red card to send it back and retry.');
@@ -641,6 +993,12 @@
     host.appendChild(tray); host.appendChild(buckets); host.appendChild(actions);
   }
 
+  // Exposed for tests only (see tests/explore-challenges.test.mjs); nothing in the page uses it.
+  window.Explore = {
+    EXPLORES: EXPLORES, CHALLENGES: CHALLENGES,
+    buildChallenge: buildChallenge, buildSort: buildSort, buildSliders: buildSliders
+  };
+
   document.addEventListener('DOMContentLoaded', function () {
     var host = document.getElementById('explore-widget');
     if (!host) return;
@@ -648,6 +1006,7 @@
     var section = host.closest('.hf-sec');
     if (!spec) { if (section) section.remove(); return; }
     if (spec.intro) host.appendChild(el('p', 'ex-intro', spec.intro));
-    if (spec.kind === 'sort') buildSort(host, spec); else buildSliders(host, spec);
+    if (spec.kind === 'sort') buildSort(host, spec, window.CURRENT_TOPIC_ID);
+    else buildSliders(host, spec, window.CURRENT_TOPIC_ID);
   });
 })();

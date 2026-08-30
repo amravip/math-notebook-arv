@@ -123,3 +123,142 @@ export function mountTileSpec(TileBuilder, spec) {
   function placeAll(values) { values.forEach((v, i) => placeAt(i, v)); }
   return { host, input, pool, slotEls, placeAt, placeAll };
 }
+
+// ---------------------------------------------------------------------------
+// explore.js
+// ---------------------------------------------------------------------------
+
+// buildChallenge() writes its four elements into card.innerHTML and then queries them back by
+// class. Rather than parse HTML, the stub hands out one node per selector and remembers it, so a
+// test can read .ex-ch-status without the sandbox needing a DOM implementation.
+function makeExploreNode(tag) {
+  const node = makeNode(tag);
+  const bySelector = {};
+  node.offsetWidth = 0;
+
+  // Only class selectors are used in explore.js, so that is all this understands.
+  const matches = (n, sel) => sel.startsWith('.') && n.classList.contains(sel.slice(1));
+  const walk = (n, sel, hits) => {
+    n.children.forEach((c) => { if (matches(c, sel)) hits.push(c); walk(c, sel, hits); });
+    return hits;
+  };
+
+  node.querySelectorAll = function (sel) { return walk(this, sel, []); };
+  node.closest = function (sel) {
+    let n = this;
+    while (n) { if (matches(n, sel)) return n; n = n.parentNode; }
+    return null;
+  };
+  Object.defineProperty(node, 'parentElement', { get() { return this.parentNode; } });
+
+  // buildSort queries elements it appended, so a real search comes first. buildChallenge queries the
+  // four elements it wrote into card.innerHTML, which this stub never parses — those fall back to a
+  // remembered node per selector so a test can still read them back.
+  node.querySelector = function (sel) {
+    const found = walk(this, sel, [])[0];
+    if (found) return found;
+    if (!bySelector[sel]) bySelector[sel] = makeExploreNode('div');
+    return bySelector[sel];
+  };
+  return node;
+}
+
+// explore.js's IIFE ends by registering a DOMContentLoaded handler (never fired here) and assigning
+// window.Explore, which exists only for these tests. `store` stands in for window.ProgressStore.
+export function loadExplore(store) {
+  const src = fs.readFileSync(path.join(ROOT, 'js', 'explore.js'), 'utf-8');
+  const sandbox = {
+    window: { ProgressStore: store || null },
+    document: { createElement: (t) => makeExploreNode(t), addEventListener() {}, getElementById: () => null },
+    console,
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(src, sandbox, { filename: 'js/explore.js' });
+  if (!sandbox.window.Explore) throw new Error('explore.js did not expose window.Explore — sandbox stub mismatch?');
+  return sandbox.window.Explore;
+}
+
+// A ProgressStore stub that records what the challenge card asked it to persist.
+export function makeStoreStub() {
+  const flags = {};
+  return {
+    xp: 0, flags,
+    getFlag: (k) => !!flags[k],
+    setFlag(k, on) { flags[k] = !!on; },
+    addXp(n) { this.xp += n; return this.xp; },
+  };
+}
+
+// Mounts one topic's challenge card and returns handles onto the bits a test needs to read.
+export function mountChallenge(Explore, topicId, store) {
+  const host = makeExploreNode('div');
+  const check = Explore.buildChallenge(host, topicId);
+  const card = host.children[0];
+  return {
+    host, card, check, store,
+    get solved() { return card.classList.contains('solved'); },
+    get tag() { return card.querySelector('.ex-ch-tag').innerHTML; },
+    get ask() { return card.querySelector('.ex-ch-ask').innerHTML; },
+    get status() { return card.querySelector('.ex-ch-status').innerHTML; },
+    get nextHidden() { return card.querySelector('.ex-ch-next').hidden; },
+    clickNext() { card.querySelector('.ex-ch-next').click(); },
+  };
+}
+
+// Every slider position of every slider, as a flat list of value objects — used to prove a
+// challenge is reachable at all, and that it is not already met by the widget's opening position.
+export function sliderCombos(spec) {
+  const axes = spec.sliders.map((s) => {
+    const vals = [];
+    for (let x = s.min; x <= s.max; x += s.step) vals.push(x);
+    return { id: s.id, vals };
+  });
+  const out = [];
+  const walk = (k, acc) => {
+    if (k === axes.length) { out.push(acc); return; }
+    for (const val of axes[k].vals) walk(k + 1, { ...acc, [axes[k].id]: val });
+  };
+  walk(0, {});
+  return out;
+}
+
+export function sliderDefaults(spec) {
+  const v = {};
+  spec.sliders.forEach((s) => { v[s.id] = s.val; });
+  return v;
+}
+
+// Mounts the real card-sort widget and returns handles for driving it: cards are addressed by their
+// face text, because the widget shuffles them on every mount.
+export function mountSort(Explore, topicId) {
+  const spec = Explore.EXPLORES[topicId];
+  const host = makeExploreNode('div');
+  Explore.buildSort(host, spec, topicId);
+  const card = host.children[0];
+  const tray = host.children[1];
+  const buckets = host.children[2];
+  const actions = host.children[3];
+  const bucketEls = buckets.children;
+  const findCard = (text) => tray.querySelectorAll('.sort-card').concat(
+    bucketEls.flatMap((b) => b.querySelectorAll('.sort-card'))
+  ).find((c) => c.innerHTML === text);
+  return {
+    host, card, tray, buckets, actions,
+    place(text, bucketIndex) {
+      const el = findCard(text);
+      if (!el) throw new Error('no card with face ' + text);
+      el.click();                       // select
+      bucketEls[bucketIndex].dispatchEvent({ type: 'click', target: bucketEls[bucketIndex] });
+    },
+    check() { actions.children[0].click(); },
+    sendBack(text) {
+      const el = findCard(text);
+      if (!el) throw new Error('no card with face ' + text);
+      el.click();
+    },
+    get result() { return actions.children[1].innerHTML || actions.children[1].textContent; },
+    get solved() { return card.classList.contains('solved'); },
+    get tag() { return card.querySelector('.ex-ch-tag').innerHTML; },
+    clickNext() { card.querySelector('.ex-ch-next').click(); },
+  };
+}

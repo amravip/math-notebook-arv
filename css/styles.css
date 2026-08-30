@@ -150,6 +150,30 @@ body{margin:0;font-family:"Nunito",system-ui,sans-serif;color:var(--ink);backgro
 .ex-canvas .ex-cap{font-family:"Space Mono",monospace;font-size:13.5px;font-weight:700;margin-top:8px;line-height:1.6}
 .ex-canvas .ex-note{font-size:13px;color:var(--ink-soft);margin-top:5px;line-height:1.5}
 .ex-num{font-family:"Bricolage Grotesque",sans-serif;font-size:32px;font-weight:800;line-height:1.2}
+
+/* ---- explore challenges ----
+   The goal card sits above the sliders, so the reader meets the target before touching a control.
+   It carries the marigold "task" accent until solved, then switches wholesale to the green success
+   palette used by a correct practice answer — same reward colour, so the cue is already learned. */
+.ex-challenge{max-width:74ch;margin:0 0 12px;padding:11px 14px 12px;border:1.5px solid var(--medium-line);
+  border-radius:12px;background:var(--medium-bg);transition:background .2s ease,border-color .2s ease}
+.ex-ch-tag{display:block;font-family:"Space Mono",monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--medium)}
+.ex-ch-ask{margin:5px 0 0;font-size:14.5px;line-height:1.5;color:var(--ink)}
+.ex-ch-status{margin:7px 0 0;font-size:12.5px;line-height:1.45;color:var(--ink-soft);min-height:1.45em}
+.ex-challenge.solved{border-color:var(--easy-line);background:var(--easy-bg)}
+.ex-challenge.solved .ex-ch-tag{color:var(--easy)}
+.ex-challenge.solved .ex-ch-status{color:var(--easy)}
+.ex-ch-next{margin-top:9px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  padding:6px 12px;border-radius:9px;border:1.5px solid var(--easy-line);background:var(--panel);color:var(--easy)}
+.ex-ch-next:hover{border-color:var(--easy);background:#fff}
+.ex-ch-next:focus-visible{outline:2.5px solid var(--easy);outline-offset:2px}
+
+/* One short pulse on the transition from unsolved to solved. It fires by re-adding the class, so it
+   marks the moment of solving rather than the state of being solved. */
+@keyframes exSolved{0%{transform:scale(1)}35%{transform:scale(1.018)}100%{transform:scale(1)}}
+.ex-challenge.just-solved{animation:exSolved .42s ease-out}
+@media(prefers-reduced-motion:reduce){.ex-challenge.just-solved{animation:none}.ex-challenge{transition:none}}
 .sort-tray{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px;min-height:38px;padding:8px;border:1.5px dashed var(--line);border-radius:12px;background:var(--panel)}
 .sort-card{font-family:"Space Mono",monospace;font-size:13px;font-weight:700;padding:7px 12px;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);cursor:pointer;color:var(--ink)}
 .sort-card.sel{border-color:var(--brand);background:var(--brand-tint);box-shadow:0 0 0 2px var(--brand-tint)}
