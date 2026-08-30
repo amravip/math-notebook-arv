@@ -50,6 +50,69 @@ function checkHeadings(file, html) {
   }
 }
 
+// Lesson figures are hand-computed SVG built in the four *-lessons.mjs modules. Two failure modes
+// are invisible in the generated HTML and obvious on the page: an element whose coordinates fall
+// outside the viewBox is silently clipped, and an unbalanced tag swallows the rest of the drawing.
+// Three figures shipped clipped before this check existed.
+const SVG_VOID = new Set(['path', 'line', 'circle', 'rect', 'polygon', 'polyline', 'ellipse', 'use', 'stop', 'image']);
+
+function checkFigures(file, html) {
+  for (const fm of html.matchAll(/<figure class="les-fig">([\s\S]*?)<\/figure>/g)) {
+    for (const sm of fm[1].matchAll(/<svg([^>]*)>([\s\S]*?)<\/svg>/g)) {
+      const attrs = sm[1], body = sm[2];
+      const name = (/aria-label="([^"]{0,50})/.exec(attrs) || [, 'unlabelled'])[1];
+      if (!/role="img"/.test(attrs) || !/aria-label="/.test(attrs)) {
+        fail(file, `figure "${name}" needs role="img" and an aria-label`);
+      }
+
+      // Tag balance.
+      const stack = [];
+      let broken = false;
+      for (const t of body.matchAll(/<(\/?)([a-zA-Z][a-zA-Z0-9-]*)([^>]*?)(\/?)>/g)) {
+        const [, close, tag, , selfClose] = t;
+        if (close) {
+          if (stack.pop() !== tag) { fail(file, `figure "${name}": </${tag}> does not close the open element`); broken = true; break; }
+        } else if (!selfClose && !SVG_VOID.has(tag)) {
+          stack.push(tag);
+        } else if (!selfClose) {
+          fail(file, `figure "${name}": <${tag}> is not self-closed`); broken = true; break;
+        }
+      }
+      if (!broken && stack.length) fail(file, `figure "${name}": unclosed <${stack.join('>, <')}>`);
+
+      // Everything drawn must land on the canvas.
+      const vb = /viewBox="([-0-9. ]+)"/.exec(attrs);
+      if (!vb) { fail(file, `figure "${name}" has no viewBox`); continue; }
+      const [vx, vy, vw, vh] = vb[1].trim().split(/\s+/).map(Number);
+      const num = (a, k) => { const m = new RegExp(k + '="(-?[0-9.]+)"').exec(a); return m ? Number(m[1]) : null; };
+      const outside = [];
+      const at = (x, y, pad) => {
+        if (x === null || y === null || Number.isNaN(x) || Number.isNaN(y)) return;
+        if (x < vx - pad || x > vx + vw + pad || y < vy - pad || y > vy + vh + pad) outside.push(`(${x}, ${y})`);
+      };
+      for (const el of body.matchAll(/<(circle|rect|text|line|polygon)([^>]*)>/g)) {
+        const a = el[2];
+        // Text sits on a baseline, so it gets a line's worth of slack; shapes get a hairline.
+        if (el[1] === 'text') at(num(a, 'x'), num(a, 'y'), 5);
+        if (el[1] === 'circle') at(num(a, 'cx'), num(a, 'cy'), 3);
+        if (el[1] === 'line') { at(num(a, 'x1'), num(a, 'y1'), 3); at(num(a, 'x2'), num(a, 'y2'), 3); }
+        if (el[1] === 'rect') {
+          at(num(a, 'x'), num(a, 'y'), 3);
+          at(num(a, 'x') + num(a, 'width'), num(a, 'y') + num(a, 'height'), 3);
+        }
+        if (el[1] === 'polygon') {
+          const pts = /points="([^"]+)"/.exec(a);
+          if (pts) pts[1].trim().split(/\s+/).forEach((pt) => { const c = pt.split(',').map(Number); at(c[0], c[1], 3); });
+        }
+      }
+      if (outside.length) {
+        fail(file, `figure "${name}" draws outside its ${vw}x${vh} viewBox at ${outside.slice(0, 4).join(' ')}` +
+          `${outside.length > 4 ? ' and ' + (outside.length - 4) + ' more' : ''} — it will be clipped`);
+      }
+    }
+  }
+}
+
 function run() {
   const tocPath = path.join(ROOT, 'js', 'toc-data.js');
   if (!fs.existsSync(tocPath)) { fail('js/toc-data.js', 'missing — run tools/generate-book.mjs first'); report(); return; }
@@ -72,6 +135,7 @@ function run() {
     }
     checkEntities(`${t.id}.html`, html);
     checkHeadings(`${t.id}.html`, html);
+    checkFigures(`${t.id}.html`, html);
     if (!html.includes(`id="${t.id}"`)) fail(`${t.id}.html`, 'missing topic section id');
     if (!html.includes('js/topic-interactions.js')) fail(`${t.id}.html`, 'missing topic-interactions.js include');
 

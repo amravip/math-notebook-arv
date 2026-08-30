@@ -18,6 +18,8 @@
 // Consumed by lesson-content.mjs, which spreads GEOMETRY_LESSONS into LESSON_EXPANSIONS.
 // New CSS classes used here: .les-h, .les-fig, .les-steps, .les-tablewrap/.les-table (css/styles.css).
 
+import { r1, svg, fig, txt, line, arrow } from './svg-kit.mjs';
+
 // ---------------------------------------------------------------------------
 // Small SVG toolkit. All figures are drawn in the notebook's existing palette
 // (brand #3B4CA8 for the "given" geometry, marigold for the angle/answer being
@@ -25,7 +27,6 @@
 // ---------------------------------------------------------------------------
 
 const RAD = Math.PI / 180;
-const r1 = (n) => Number(n.toFixed(1));
 
 // Point on a circle, using ordinary maths angles (0° = east, anticlockwise positive) even though
 // SVG's y-axis points down — every figure below thinks in maths angles and this does the flip.
@@ -41,33 +42,6 @@ function wedge(cx, cy, r, a1, a2, fill) {
   const large = Math.abs(a2 - a1) > 180 ? 1 : 0;
   return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 0 ${x2},${y2} Z" fill="${fill}"/>`;
 }
-
-function txt(x, y, s, o) {
-  o = o || {};
-  const fam = o.mono ? 'Space Mono, monospace' : 'Nunito, sans-serif';
-  const rot = o.rotate ? ` transform="rotate(${o.rotate} ${x} ${y})"` : '';
-  return `<text x="${x}" y="${y}" text-anchor="${o.anchor || 'middle'}" font-family="${fam}" ` +
-    `font-size="${o.size || 11}" font-weight="${o.weight || 700}" fill="${o.fill || '#20263F'}"${rot}>${s}</text>`;
-}
-
-function line(x1, y1, x2, y2, stroke, w, dash) {
-  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${w || 2}" ` +
-    `stroke-linecap="round"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`;
-}
-
-// Straight arrow with a solid head, used for translation vectors and "this is the circumference"
-// pointers.
-function arrow(x1, y1, x2, y2, color) {
-  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len, uy = dy / len, h = 7;
-  const bx = x2 - ux * h, by = y2 - uy * h;
-  const px = -uy * 4, py = ux * 4;
-  return line(x1, y1, r1(bx), r1(by), color, 2) +
-    `<polygon points="${x2},${y2} ${r1(bx + px)},${r1(by + py)} ${r1(bx - px)},${r1(by - py)}" fill="${color}"/>`;
-}
-
-const svg = (w, h, label, body, width) =>
-  `<svg viewBox="0 0 ${w} ${h}" width="${width || w}" role="img" aria-label="${label}">${body}</svg>`;
 
 // --- Angles: the five kinds of angle, drawn to scale in one strip ----------------------------
 export function angleTypesSVG() {
@@ -305,9 +279,6 @@ export function wedgeRearrangeSVG() {
   return `<svg viewBox="0 -4 ${W} ${H + 38}" width="${W}" role="img" aria-label="A circle sliced into wedges and rearranged into a zigzag strip that approximates a rectangle">${g}</svg>`;
 }
 
-const fig = (svgMarkup, caption) =>
-  `<figure class="les-fig">${svgMarkup}<figcaption>${caption}</figcaption></figure>`;
-
 // ---------------------------------------------------------------------------
 // The lessons
 // ---------------------------------------------------------------------------
@@ -452,6 +423,14 @@ ${fig(transformPanelsSVG(), 'Blue is the object, orange is the image. A translat
   <li>So doubling every side (k = 2) makes a shape hold <b>4 times</b> as much, not twice. For example, a 3 &times; 3 square (area 9) enlarges to 6 &times; 6, area 36 &mdash; four times as much.</li>
   <li>The same logic carries on: volume scales by k&sup3;. One, two, three dimensions &mdash; one, two, three powers of k.</li>
 </ul>
+<p class="les-h">Transforming a shape, point by point</p>
+<ol class="les-steps">
+  <li><b>Read what is fixed:</b> a translation needs its vector, a reflection its mirror line, a rotation its centre <em>and</em> direction, an enlargement its centre and scale factor. A rotation without a centre is not a defined move.</li>
+  <li><b>Take the vertices one at a time</b> and apply the rule to each, writing the image coordinates down as you go. Never try to move the whole shape by eye.</li>
+  <li><b>Join the image points</b> in the same order as the original, and label them A&prime;, B&prime;, C&prime;.</li>
+  <li><b>Check the result is the right kind of shape:</b> after a slide, flip or turn it must be <em>congruent</em> &mdash; same size, same angles. Only an enlargement may change the size.</li>
+  <li><b>Sanity-check one length</b> against the original. If a "rotation" has changed a side length, a point was plotted wrongly.</li>
+</ol>
 <div class="kbox"><span class="kbox-tag">Congruent or similar?</span><span class="formula">slide / flip / turn &rarr; CONGRUENT<br>enlarge by k &rarr; SIMILAR<br>lengths &times;k&nbsp;&nbsp;area &times;k&sup2;&nbsp;&nbsp;volume &times;k&sup3;</span></div>
 <div class="rw-examples">
   <div class="rw-card">
