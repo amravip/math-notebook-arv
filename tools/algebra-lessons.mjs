@@ -115,6 +115,39 @@ function expandAreaSVG() {
   return svg(X + W1 + W2 + 16, Y + H + 56, 'A rectangle of height 2 split into a part x wide and a part 3 wide, showing 2 times x plus 2 times 3', g, 330);
 }
 
+// Substitute, plot, join — with the table and the grid side by side, so the three (x, y) pairs are
+// visibly the same three points. The third point is drawn last because it is the check, not decoration.
+function plotFromTableSVG() {
+  const rows = [[0, -1], [1, 1], [2, 3]];
+  const TX = 10, TY = 30, RW = 96, RH = 28;
+  let g = txt(TX + RW / 2, TY - 10, 'y = 2x &minus; 1', { size: 12.5, mono: true, fill: C.brandDeep });
+  g += rect(TX, TY, RW, RH, { r: 0, fill: C.brandTint, stroke: C.brand, sw: 1.2 });
+  g += txt(TX + RW / 4, TY + 19, 'x', { size: 12, mono: true, fill: C.brandDeep });
+  g += txt(TX + (3 * RW) / 4, TY + 19, 'y', { size: 12, mono: true, fill: C.brandDeep });
+  g += line(TX + RW / 2, TY, TX + RW / 2, TY + RH * (rows.length + 1), C.brand, 1.2);
+  rows.forEach((r, i) => {
+    const y = TY + RH * (i + 1);
+    g += rect(TX, y, RW, RH, { r: 0, fill: C.paper, stroke: C.brand, sw: 1.2 });
+    g += txt(TX + RW / 4, y + 19, String(r[0]), { size: 13, mono: true, fill: C.ink });
+    g += txt(TX + (3 * RW) / 4, y + 19, r[1] < 0 ? '&minus;' + Math.abs(r[1]) : String(r[1]), { size: 13, mono: true, fill: C.ink });
+  });
+  g += txt(TX + RW / 2, TY + RH * 4 + 20, 'substitute, then plot', { size: 10, fill: C.inkSoft, weight: 600 });
+
+  const U = 26, xMin = -1, yMin = -2;
+  const px = (x) => r1(170 + (x - xMin) * U);
+  const py = (y) => r1(176 - (y - yMin) * U);
+  for (let x = xMin; x <= 3; x++) g += line(px(x), py(4), px(x), py(yMin), C.line, 1);
+  for (let y = yMin; y <= 4; y++) g += line(px(xMin), py(y), px(3), py(y), C.line, 1);
+  g += line(px(xMin), py(0), px(3), py(0), C.inkSoft, 1.6);
+  g += line(px(0), py(4), px(0), py(yMin), C.inkSoft, 1.6);
+  g += line(px(-0.5), py(-2), px(2.5), py(4), C.brand, 2.4);
+  rows.forEach((r) => {
+    g += `<circle cx="${px(r[0])}" cy="${py(r[1])}" r="4.5" fill="${C.marigold}" stroke="${C.ink}" stroke-width="1.6"/>`;
+  });
+  g += txt(px(1), py(4) - 8, '(0,&minus;1) (1,1) (2,3)', { size: 10, mono: true, fill: C.inkSoft, weight: 600 });
+  return svg(300, 200, 'A table of three x and y values beside a grid with those three points plotted and joined by a straight line', g, 300);
+}
+
 // The balance that makes every legal move legal. Both pans are drawn level, and the step removes the
 // same weight from each — which is the entire justification for "do the same to both sides".
 function balanceSVG() {
@@ -409,6 +442,7 @@ ${fig(linearGraphSVG(), 'In <b>y = mx + c</b>, the c is where the line crosses t
   <li>Lines with the same gradient are parallel: y = 2x + 1 and y = 2x &minus; 4 climb identically and never meet.</li>
 </ul>
 <p class="les-h">Plotting a line by hand</p>
+${fig(plotFromTableSVG(), 'Every row of the table is one point on the grid. Work out all three <em>before</em> plotting any of them &mdash; then if the three do not fall in a straight line, you have caught an arithmetic slip rather than drawn it.')}
 <ol class="les-steps">
   <li><b>Pick three easy x-values</b> &mdash; 0, 1 and 2 will do for almost any question.</li>
   <li><b>Substitute each into the equation</b> and write the (x, y) pair down before plotting anything.</li>

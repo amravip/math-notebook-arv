@@ -18,7 +18,7 @@
 // Consumed by lesson-content.mjs, which spreads GEOMETRY_LESSONS into LESSON_EXPANSIONS.
 // New CSS classes used here: .les-h, .les-fig, .les-steps, .les-tablewrap/.les-table (css/styles.css).
 
-import { r1, svg, fig, txt, line, arrow } from './svg-kit.mjs';
+import { r1, svg, fig, txt, line, rect, arrow } from './svg-kit.mjs';
 
 // ---------------------------------------------------------------------------
 // Small SVG toolkit. All figures are drawn in the notebook's existing palette
@@ -279,6 +279,106 @@ export function wedgeRearrangeSVG() {
   return `<svg viewBox="0 -4 ${W} ${H + 38}" width="${W}" role="img" aria-label="A circle sliced into wedges and rearranged into a zigzag strip that approximates a rectangle">${g}</svg>`;
 }
 
+// --- Pythagoras: the hypotenuse is defined by the right angle, not by the page ------------------
+// The chapter opens by saying "find the right angle first, then look straight across". Three turns of
+// the same triangle make that concrete: the longest side moves around the page, but it is always the
+// one facing the square corner.
+function hypotenuseOrientationsSVG() {
+  const panels = [
+    { pts: [[14, 96], [92, 96], [14, 38]], right: 0, label: 'right angle bottom-left' },
+    { pts: [[16, 34], [94, 34], [94, 96]], right: 1, label: 'right angle top-right' },
+    { pts: [[16, 96], [94, 96], [94, 30]], right: 1, label: 'right angle bottom-right' },
+  ];
+  let g = '';
+  panels.forEach((p, i) => {
+    const ox = i * 112;
+    const P = p.pts.map((q) => [q[0] + ox, q[1]]);
+    const R = P[p.right];
+    const others = P.filter((_, k) => k !== p.right);
+    g += `<polygon points="${P.map((q) => q.join(',')).join(' ')}" fill="#E8ECFA" stroke="#3B4CA8" stroke-width="1.6"/>`;
+    // The right-angle square, built from equal steps along the two sides that meet there.
+    const step = (from, to, d) => {
+      const dx = to[0] - from[0], dy = to[1] - from[1], len = Math.hypot(dx, dy) || 1;
+      return [r1(from[0] + (dx / len) * d), r1(from[1] + (dy / len) * d)];
+    };
+    const u = step(R, others[0], 11), w = step(R, others[1], 11);
+    const corner = [r1(u[0] + w[0] - R[0]), r1(u[1] + w[1] - R[1])];
+    g += `<polyline points="${u.join(',')} ${corner.join(',')} ${w.join(',')}" fill="none" stroke="#20263F" stroke-width="1.4"/>`;
+    // The hypotenuse joins the two corners that are NOT the right angle.
+    g += line(others[0][0], others[0][1], others[1][0], others[1][1], '#C9791A', 3.2);
+    const mid = [r1((others[0][0] + others[1][0]) / 2), r1((others[0][1] + others[1][1]) / 2)];
+    g += txt(mid[0] + (i === 0 ? 13 : -13), mid[1] - 3, 'c', { size: 13, fill: '#8a5a10' });
+    g += txt(ox + 55, 118, p.label, { size: 9, fill: '#5A6178', weight: 600 });
+  });
+  g += txt(170, 14, 'the hypotenuse always faces the square corner', { size: 10.5, fill: '#5A6178', weight: 600 });
+  return svg(340, 126, 'The same right-angled triangle in three orientations, with the hypotenuse highlighted opposite the right angle each time', g, 340);
+}
+
+// --- Shapes: classifying a triangle by its sides ------------------------------------------------
+// Tick marks are the convention for "these sides are equal", and reading them is exactly what the
+// chapter's card sort asks for.
+function triangleTypesSVG() {
+  const kinds = [
+    { name: 'Equilateral', desc: 'all three equal', pts: [[52, 26], [16, 92], [88, 92]], ticks: [1, 1, 1] },
+    { name: 'Isosceles', desc: 'exactly two equal', pts: [[52, 26], [18, 92], [86, 92]], ticks: [1, 1, 0] },
+    { name: 'Scalene', desc: 'none equal', pts: [[34, 26], [14, 92], [92, 92]], ticks: [0, 0, 0] },
+  ];
+  let g = '';
+  kinds.forEach((k, i) => {
+    const ox = i * 112;
+    const P = k.pts.map((q) => [q[0] + ox, q[1]]);
+    g += `<polygon points="${P.map((q) => q.join(',')).join(' ')}" fill="#E8ECFA" stroke="#3B4CA8" stroke-width="1.6"/>`;
+    // One tick across the midpoint of each side that shares its length with another.
+    [[0, 1], [0, 2], [1, 2]].forEach((pair, si) => {
+      if (!k.ticks[si]) return;
+      const a = P[pair[0]], b = P[pair[1]];
+      const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+      const nx = (-dy / len) * 5, ny = (dx / len) * 5;
+      g += line(r1(mx - nx), r1(my - ny), r1(mx + nx), r1(my + ny), '#C9791A', 2.2);
+    });
+    g += txt(ox + 52, 110, k.name, { size: 11.5, fill: '#20263F' });
+    g += txt(ox + 52, 122, k.desc, { size: 9.5, fill: '#5A6178', weight: 600 });
+  });
+  return svg(340, 130, 'Three triangles classified by their sides: equilateral with a tick on all three, isosceles with a tick on two, and scalene with none', g, 340);
+}
+
+// --- Transformations: the three coordinate rules, from one point --------------------------------
+// As a table they are three strings to memorise. Drawn from a single point they are three places it
+// can land, and the sign changes become something you can see.
+function coordRulesSVG() {
+  const S = 196, pad = 16, u = (S - 2 * pad) / 8, cx = S / 2, cy = S / 2;
+  const X = (a) => r1(cx + a * u), Y = (a) => r1(cy - a * u);
+  let g = '';
+  for (let i = -4; i <= 4; i++) {
+    g += line(X(i), pad, X(i), S - pad, '#E4E8F2', 1);
+    g += line(pad, Y(i), S - pad, Y(i), '#E4E8F2', 1);
+  }
+  g += line(pad, cy, S - pad, cy, '#5A6178', 1.5) + line(cx, pad, cx, S - pad, '#5A6178', 1.5);
+  const marks = [
+    { at: [3, 2], fill: '#FFC24B', label: 'P (3, 2)', dx: 7, dy: -9, colour: '#20263F' },
+    { at: [3, -2], fill: '#fff', label: "(3, &minus;2)", dx: 7, dy: 15, colour: '#3B4CA8' },
+    { at: [-3, 2], fill: '#fff', label: '(&minus;3, 2)', dx: -7, dy: -9, colour: '#238B62', anchor: 'end' },
+    { at: [-3, -2], fill: '#fff', label: '(&minus;3, &minus;2)', dx: -7, dy: 15, colour: '#7C5CBF', anchor: 'end' },
+  ];
+  marks.slice(1).forEach((m) => { g += line(X(3), Y(2), X(m.at[0]), Y(m.at[1]), m.colour, 1.2, '3 3'); });
+  marks.forEach((m) => {
+    g += `<circle cx="${X(m.at[0])}" cy="${Y(m.at[1])}" r="5" fill="${m.fill}" stroke="${m.colour}" stroke-width="2"/>`;
+    g += txt(X(m.at[0]) + m.dx, Y(m.at[1]) + m.dy, m.label, { size: 9.5, anchor: m.anchor || 'start', fill: m.colour });
+  });
+  const rules = [
+    ['reflect in x-axis', '(x, y) &rarr; (x, &minus;y)', '#3B4CA8'],
+    ['reflect in y-axis', '(x, y) &rarr; (&minus;x, y)', '#238B62'],
+    ['rotate 180&deg;', '(x, y) &rarr; (&minus;x, &minus;y)', '#7C5CBF'],
+  ];
+  rules.forEach((r, i) => {
+    const y = 52 + i * 36;
+    g += txt(212, y, r[0], { size: 10.5, anchor: 'start', fill: '#5A6178', weight: 600 });
+    g += txt(212, y + 15, r[1], { size: 12, mono: true, anchor: 'start', fill: r[2] });
+  });
+  return svg(356, S + 4, 'A point at 3 comma 2 with its images under a reflection in each axis and a 180 degree rotation, each labelled with its coordinate rule', g, 340);
+}
+
 // ---------------------------------------------------------------------------
 // The lessons
 // ---------------------------------------------------------------------------
@@ -335,6 +435,7 @@ ${fig(parallelAnglesSVG(), 'The same figure three times. <b>Corresponding</b> an
   shapes: `
 <p>A <span class="term">polygon</span> is a closed flat shape made only of straight sides &mdash; and it is named by how many sides it has: 3 triangle, 4 quadrilateral, 5 pentagon, 6 hexagon, 8 octagon. A polygon is <span class="term">regular</span> when <span class="hl">all its sides and all its angles are equal</span>.</p>
 <p class="les-h">Triangles are named twice over</p>
+${fig(triangleTypesSVG(), 'Matching tick marks mean &ldquo;these sides are the same length&rdquo; &mdash; the standard way a diagram tells you which triangle you are looking at, when the drawing itself is not to scale.')}
 <ul class="def-list">
   <li><b>By their sides:</b> <span class="term">equilateral</span> (all three equal), <span class="term">isosceles</span> (exactly two equal), <span class="term">scalene</span> (none equal).</li>
   <li><b>By their biggest angle:</b> right-angled (one 90&deg; angle), acute (all three under 90&deg;), obtuse (one over 90&deg;). Both names can apply at once &mdash; a triangle can be right-angled <em>and</em> isosceles.</li>
@@ -403,6 +504,7 @@ ${fig(transformPanelsSVG(), 'Blue is the object, orange is the image. A translat
   <li>If a question does not say which way to turn, mathematicians rotate <span class="term">anticlockwise</span> by convention. So "rotate 90&deg;" with no direction given means 90&deg; anticlockwise.</li>
 </ul>
 <p class="les-h">Coordinate rules worth knowing by heart</p>
+${fig(coordRulesSVG(), 'One point, three images. Reflecting in the x-axis flips the <b>y</b> sign, reflecting in the y-axis flips the <b>x</b> sign, and a 180&deg; rotation flips both &mdash; which is why it lands diagonally opposite.')}
 <div class="les-tablewrap"><table class="les-table">
   <thead><tr><th>Transformation</th><th>Rule</th><th>Example</th></tr></thead>
   <tbody>
@@ -449,6 +551,8 @@ ${fig(transformPanelsSVG(), 'Blue is the object, orange is the image. A translat
 
   pythagoras: `
 <p>In a <span class="hl">right-angled</span> triangle, the side opposite the right angle is always the longest, and has its own name: the <span class="term">hypotenuse</span>. Find the right angle first, look straight across from it, and that is the hypotenuse &mdash; whichever way the triangle happens to be turned.</p>
+<p class="les-h">Finding the hypotenuse before you calculate</p>
+${fig(hypotenuseOrientationsSVG(), 'The hypotenuse is not &ldquo;the bottom one&rdquo; or &ldquo;the sloping one&rdquo; &mdash; it is whichever side sits <b>opposite the right angle</b>. Find the square corner, look straight across, and label that side c before substituting anything.')}
 <p class="les-h">Why the rule talks about squares</p>
 ${fig(pythagSquaresSVG(), 'Draw an actual square on each side of a 3-4-5 triangle. The two smaller squares hold 9 and 16 unit squares &mdash; and 9 + 16 = 25 fills the big one exactly. That is all <b>a&sup2; + b&sup2; = c&sup2;</b> is saying.')}
 <p><span class="term">Pythagoras' theorem</span>: <b>a&sup2; + b&sup2; = c&sup2;</b>, where c is the hypotenuse and a and b are the two shorter sides. It works for every right-angled triangle and for no other kind, so the first thing to check is that the right-angle mark is really there.</p>

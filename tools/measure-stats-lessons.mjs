@@ -185,6 +185,30 @@ function averagesSVG() {
   return svg(360, BASE + 82, 'A dot plot with a cluster of small values and one outlier at eighteen, with the mean pulled to the right of the median', g, 350);
 }
 
+// The median depends entirely on ordering, and on whether the count is odd or even. Both cases are
+// drawn together because the even case is the one that gets answered as "there is no median".
+function medianOrderSVG() {
+  const chip = (x, y, val, state) => {
+    const fill = state === 'mid' ? C.greenTint : C.paper;
+    const stroke = state === 'mid' ? C.green : C.line;
+    return rect(x, y, 34, 26, { r: 7, fill, stroke, sw: state === 'mid' ? 1.8 : 1.2 }) +
+      txt(x + 17, y + 18, String(val), { size: 13, mono: true, fill: state === 'mid' ? C.greenInk : C.ink });
+  };
+  const row = (y, label, raw, sorted, midIdx, verdict) => {
+    let s = txt(10, y + 18, label, { size: 10.5, anchor: 'start', fill: C.inkSoft, weight: 600 });
+    s += txt(74, y + 18, raw.join(', '), { size: 12, mono: true, anchor: 'start', fill: C.inkSoft });
+    s += txt(180, y + 18, '&rarr;', { size: 14, fill: C.inkSoft });
+    sorted.forEach((val, i) => {
+      s += chip(200 + i * 38, y, val, midIdx.indexOf(i) >= 0 ? 'mid' : '');
+    });
+    s += txt(200, y + 44, verdict, { size: 10.5, anchor: 'start', fill: C.greenInk });
+    return s;
+  };
+  let g = row(16, '5 values', [3, 7, 4, 9, 5], [3, 4, 5, 7, 9], [2], 'odd count &rarr; median = 5');
+  g += row(88, '4 values', [10, 4, 8, 6], [4, 6, 8, 10], [1, 2], 'even count &rarr; median = (6 + 8) &divide; 2 = 7');
+  return svg(400, 148, 'Two data sets put in order, one with five values and a single middle, one with four values and two middle values averaged', g, 350);
+}
+
 // The 0-to-1 scale, with words placed where they actually belong. "Likely" is not a number, and this
 // is where the number lives.
 function probScaleSVG() {
@@ -372,6 +396,7 @@ ${fig(averagesSVG(), 'Eight values sit between 2 and 6, and one sits at 18. The 
   <li>The mean need not be one of the actual values: for 2, 3, 3, 10 the mean is 4.5, a number that appears nowhere in the list.</li>
 </ul>
 <p class="les-h">Summarising a data set</p>
+${fig(medianOrderSVG(), 'The median is the <b>middle of the ordered list</b>, so ordering comes first every time. With an odd count one value sits in the middle; with an even count two do, and the median is their average &mdash; a number that need not appear in the data at all.')}
 <ol class="les-steps">
   <li><b>Put the data in order first.</b> Median and range are both wrong without it, and outliers become obvious.</li>
   <li><b>Count the values</b> &mdash; you need the count for the mean, and its odd-or-evenness for the median.</li>
