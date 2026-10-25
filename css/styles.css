@@ -565,7 +565,9 @@ body.revise .ex.attempted{display:none}
    in --c/--c-bg/--c-tint/--c-tint2/--c-line set inline in practice.html), so the two "pick something
    to work on" pages read as one system. auto-fit means the three areas sit on one row rather than
    leaving the third orphaned beside a gap. */
-.practice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px;margin:20px 0}
+.practice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin:20px 0}
+@media(max-width:640px){.practice-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}}
+@media(max-width:520px){.practice-grid{grid-template-columns:1fr;gap:14px}}
 .practice-card{display:flex;flex-direction:column;overflow:hidden;text-align:left;
   border:1.5px solid var(--c-line,var(--line));border-radius:18px;background:var(--c-bg,var(--panel));box-shadow:var(--shadow)}
 .practice-art{position:relative;display:grid;place-items:center;height:104px;color:var(--c,var(--brand));
