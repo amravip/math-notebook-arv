@@ -725,6 +725,31 @@ ${extraScripts.map(s => `<script src="${root}${s}"></script>`).join('\n')}
 
 // --- 3b. Graded drag-and-drop pilot: js/tile-builder.js, applied to Patterns' Medium tier ---
 //
+// The four phases of every chapter's learning path, in reading order. Sections keep their order;
+// the phases only label it, in the navigator and as a divider where each phase begins.
+const PHASES = [
+  { id: 'ready', label: 'Get ready', keys: ['goals', 'prereq', 'wonder', 'discovery', 'vocab'] },
+  { id: 'learn', label: 'Learn', keys: ['explain', 'visual', 'explore', 'examples'] },
+  { id: 'practise', label: 'Practise', keys: ['practice', 'assignment', 'misconception'] },
+  { id: 'review', label: 'Reflect & extend', keys: ['realworld', 'reflect', 'retrieval', 'further', 'summary'] },
+];
+const phaseOf = key => PHASES.find(p => p.keys.includes(key));
+
+function withPhaseLabels(parts) {
+  const out = [];
+  let last = null;
+  for (const part of parts) {
+    const m = /data-section="([\w-]+)"/.exec(part);
+    const p = m && phaseOf(m[1]);
+    if (p && p !== last) {
+      out.push(`<p class="phase-label" data-phase="${p.id}"><span class="phase-num">${PHASES.indexOf(p) + 1}</span>${p.label.replace('&', '&amp;')}</p>`);
+      last = p;
+    }
+    out.push(part);
+  }
+  return out;
+}
+
 function renderChapterBody(t, group, prev, next) {
   const c = t.__ch || {};
   const dynamic = DYNAMIC_IDS.has(t.id);
@@ -732,7 +757,7 @@ function renderChapterBody(t, group, prev, next) {
   const lessonHtml = t.lesson || `<p>${t.idea}</p>`;
 
   const road = [];
-  const addRoad = (key, label, show) => { if (show) road.push(`<button class="hf-jump" type="button" data-target="${key}"><span class="dot"></span><span>${label}</span></button>`); };
+  const addRoad = (key, label, show) => { if (show) road.push({ key, html: `<button class="hf-jump" type="button" data-target="${key}"><span class="dot"></span><span>${label}</span></button>` }); };
   const intro = INTRO_FIG[t.id] ? `<figure class="figwrap intro">${INTRO_FIG[t.id]()}<figcaption class="figcap">${INTRO_CAP[t.id] || ''}</figcaption></figure>` : '';
   const model = t.model || STATIC_MODELS[t.id] || '';
   addRoad('goals', 'Goals', c.goals);
@@ -745,20 +770,32 @@ function renderChapterBody(t, group, prev, next) {
   addRoad('examples', 'Examples', true);
   addRoad('practice', 'Practice', true);
   addRoad('assignment', 'Assignment', true);
+  addRoad('misconception', 'Mistake detective', c.mistake);
+  addRoad('realworld', 'Real world', c.realworld);
+  addRoad('reflect', 'Reflect', c.reflect);
   addRoad('retrieval', 'Retrieval', c.retrieval);
   addRoad('further', 'Go further', GO_FURTHER[t.id]);
-  // The roadmap doubles as the chapter's sticky navigator: it scrolls with the page until it meets
-  // the topbar, then pins there so a reader is never lost inside a 17-section chapter. The rail
-  // fills with reading progress; js/topic-interactions.js highlights the section currently on screen.
+  addRoad('summary', 'Summary', c.summary);
+  // The roadmap doubles as the chapter's sticky navigator: a sidebar on wide screens, a strip that
+  // pins under the topbar on narrow ones, so a reader is never lost inside a 17-section chapter. The
+  // rail fills with reading progress; js/topic-interactions.js highlights the section on screen.
+  // Chips sit under the phase they belong to, so the navigator shows the learning path itself.
+  let lastPhase = null;
+  const roadHtml = road.map(r => {
+    const p = phaseOf(r.key);
+    const label = p && p !== lastPhase ? `<span class="hf-phase">${p.label.replace('&', '&amp;')}</span>` : '';
+    lastPhase = p || lastPhase;
+    return label + r.html;
+  }).join('');
   const roadmap = road.length ? `<nav class="hf-roadmap" aria-label="Chapter sections">
-    <div class="hf-roadmap-track">${road.join('')}</div>
+    <p class="hf-roadmap-title">Learning path</p>
+    <div class="hf-roadmap-track">${roadHtml}</div>
     <div class="hf-roadmap-rail"><span></span></div>
   </nav>` : '';
   const visualParts = [intro, model ? `<div class="model">${model}</div>` : ''].filter(Boolean).join('');
 
   const S = [];
-  if (c.hook) S.push(`<div class="hf-hook"><span class="hf-spark">&#10022;</span><span>${c.hook}</span></div>`);
-  if (roadmap) S.push(roadmap);
+  const hook = c.hook ? `<div class="hf-hook"><span class="hf-spark">&#10022;</span><span>${c.hook}</span></div>` : '';
   if (c.goals) S.push(`<section class="hf-sec goals" data-section="goals"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#127919; By the end you can</button></h2><ul class="hf-goals">${c.goals.map(g => `<li>${g}</li>`).join('')}</ul></section>`);
   if (c.prereq) S.push(`<section class="hf-sec prereq" data-section="prereq"><h2 class="hf-head"><button class="hf-tag" type="button" aria-expanded="true">&#9989; Before you start</button></h2><ul class="hf-list">${c.prereq.map(p => `<li>${p}</li>`).join('')}</ul></section>`);
   // Illustrative Mathematics' "Notice and Wonder" warm-up: an open scene with two low-stakes
@@ -903,7 +940,13 @@ function renderChapterBody(t, group, prev, next) {
     </div>
   </div>
   ${chapterStats}
-  ${S.join('\n  ')}
+  ${hook}
+  <div class="chapter-layout">
+  ${roadmap}
+  <div class="chapter-body">
+  ${withPhaseLabels(S).join('\n  ')}
+  </div>
+  </div>
 </section>`;
   return { html, checkMap: staticCheck };
 }

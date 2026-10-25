@@ -288,6 +288,21 @@
   // ---- sticky chapter navigator ----------------------------------------------------------------
   // Keeps the roadmap pinned under the topbar, marks the section currently on screen, and fills a
   // rail with reading progress. Without this a 17-section chapter gives no sense of place at all.
+  // On wide screens the navigator is a sidebar beside the sections (see .chapter-layout in
+  // css/styles.css); the breakpoint here must match the one there.
+  var SIDEBAR_MQ = window.matchMedia ? window.matchMedia('(min-width: 1100px)') : null;
+  function sidebarMode() { return !!(SIDEBAR_MQ && SIDEBAR_MQ.matches); }
+
+  // The line a section's top must cross to count as "on screen": just under the pinned strip, or
+  // just under the topbar when the navigator is a sidebar (whose bottom edge is far down the page).
+  function readingLine() {
+    if (sidebarMode()) {
+      return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h')) || 64;
+    }
+    var nav = document.querySelector('.hf-roadmap');
+    return nav ? nav.getBoundingClientRect().bottom : 0;
+  }
+
   function initChapterNav() {
     var nav = document.querySelector('.hf-roadmap');
     if (!nav) return;
@@ -312,9 +327,16 @@
     });
 
     function setActive(i) {
-      chips.forEach(function (c, j) { c.classList.toggle('on', i === j); });
+      chips.forEach(function (c, j) { c.classList.toggle('on', i === j); c.classList.toggle('past', j < i); });
       var chip = chips[i];
       if (!chip || !track) return;
+      if (sidebarMode()) {
+        // A short window can make the sidebar scroll; keep the active chip inside it.
+        var cTop = chip.offsetTop, cBottom = cTop + chip.offsetHeight;
+        if (cTop < nav.scrollTop + 40) nav.scrollTop = cTop - 40;
+        else if (cBottom > nav.scrollTop + nav.clientHeight - 40) nav.scrollTop = cBottom - nav.clientHeight + 40;
+        return;
+      }
       // Keep the active chip visible in the horizontally scrolling strip without scrolling the page
       // (scrollIntoView would do both).
       var cLeft = chip.offsetLeft, cRight = cLeft + chip.offsetWidth;
@@ -323,8 +345,8 @@
     }
 
     function onScroll() {
-      var navBottom = nav.getBoundingClientRect().bottom;
-      nav.classList.toggle('stuck', nav.getBoundingClientRect().top <= (parseFloat(
+      var navBottom = readingLine();
+      nav.classList.toggle('stuck', !sidebarMode() && nav.getBoundingClientRect().top <= (parseFloat(
         getComputedStyle(document.documentElement).getPropertyValue('--topbar-h')) || 64));
 
       // Active = the last section whose top has reached the probe line. The line sits well below the
@@ -390,7 +412,7 @@
     }
 
     window.addEventListener('scroll', function () {
-      var navBottom = document.querySelector('.hf-roadmap').getBoundingClientRect().bottom;
+      var navBottom = readingLine();
       for (var i = sections.length - 1; i >= 0; i--) {
         if (sections[i] && sections[i].getBoundingClientRect().top <= navBottom + 100) {
           if (i > deepest) { deepest = i; PS.setMark(topicId, chips[i].dataset.target); }
